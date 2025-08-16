@@ -1,0 +1,173 @@
+Je souhaite développer une application mobile nommée "LogiSmart" qui offre une solution complète de gestion logistique et douanière intelligente. L’application est destinée aux utilisateurs africains et internationaux souhaitant envoyer, suivre ou estimer des colis à l’import/export. Elle sera développée avec une interface moderne, fluide , et devra fonctionner sur Android et iOS.
+
+🔹 Fonctionnalités principales à développer :
+1️⃣ Écran d’accueil
+
+Boutons : Se connecter, S’inscrire
+
+Barre de recherche avec numéro de suivi (et scan QR)
+
+Message personnalisé : “Bonjour, Invité”
+
+Accès rapide aux sections :
+
+Obtenir un tarif
+
+Créer un envoi
+
+Suivi de colis
+
+Rechercher un code HS
+
+Accès au tableau de bord
+
+Chatbot IA douanier
+
+2️⃣ Obtenir un tarif
+
+Sélection du mode de transport : Aérien, Routier, Maritime
+
+Saisie du lieu d’enlèvement et de livraison
+
+Poids et dimensions du colis
+
+Calcul dynamique du tarif
+
+Comparateur de modes de transport (ex : avion vs bateau)
+
+3️⃣ Créer un envoi
+
+Formulaire : expéditeur, destinataire, poids, dimensions, contenu
+
+Choix du transporteur / mode
+
+Paiement intégré ou différé
+
+Génération automatique des documents douaniers (PDF : facture, déclaration, lettre de transport)
+
+4️⃣ Suivi de colis
+
+Recherche par numéro de suivi ou scan
+
+Statut du colis en temps réel avec tracking sur carte
+
+Notifications push à chaque étape
+
+5️⃣ Rechercher un code HS
+
+Saisie d’une description de marchandise
+
+IA ou algorithme pour suggérer le code HS
+
+Affichage des taxes associées
+
+6️⃣ Chatbot IA douanier
+
+Chat interactif en français et autres langues
+
+Répond aux questions sur : taxes, délais, documents requis, interdictions
+
+Peut suggérer un code HS ou générer une checklist personnalisée
+
+7️⃣ Tableau de bord utilisateur
+
+Historique des envois
+
+Alertes douanières
+
+Documents téléchargeables
+
+Statistiques (dépenses, délais moyens)
+
+8️⃣ Alertes réglementaires
+
+Notifications automatiques :
+
+Changement de taxe
+
+Interdiction de marchandise
+
+Obligation de licence ou certificat
+
+9️⃣ Partenariats logistiques
+
+Réservation de transporteurs partenaires
+
+API de suivi intégrée
+
+Affichage des options disponibles avec délai estimé
+
+🔟 Interface multilingue
+
+Langues supportées : français, anglais
+
+Traduction de toute l’interface utilisateur
+
+Option de choix manuel ou détection automatique
+
+🚀 NOUVEAU MODULE
+1️⃣1️⃣ Suivi en temps réel de l’évolution du dossier de dédouanement
+
+📲 Notifications client à chaque étape :
+
+Réception du BL (Bill of Lading)
+
+Passage en douane
+
+Sortie portuaire
+
+Départ camion vers la destination finale
+
+📁 Accès sécurisé aux documents :
+
+Déclaration d’Importation (DDI)
+
+Factures
+
+Manifestes
+
+Certificat d’origine
+
+✍️ Signature électronique des bons de livraison directement dans l’application.
+
+Avantages pour le client :
+
+Réduction du stress et des pertes de temps
+
+Transparence totale sur toute la chaîne logistique et douanière.
+
+🧱 Spécifications techniques :
+
+Framework mobile : Flutter (ou React Native)
+
+Backend : Node.js, Firebase ou Django
+
+Base de données :  PostgreSQL
+
+Authentification : Email / Téléphone (OTP)
+
+Notifications : Firebase Cloud Messaging
+
+APIs / Webhooks :
+
+Suivi colis
+
+Tarification
+
+HS Codes
+
+Dédouanement (mock ou réel)
+
+Signature électronique : Intégration d’un module de signature (DocuSign API ou équivalent)
+
+Multilingue : via i18n
+
+🎨 Design attendu :
+
+Interface moderne et intuitive
+
+Couleurs : Violet, blanc, bleu
+
+Icônes pour chaque fonctionnalité
+
+Barre de navigation fixe en bas : Accueil – Dépôt – Service client – Compte
