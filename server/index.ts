@@ -1,20 +1,33 @@
-import express, { type Request, Response, NextFunction } from "express";
+// server/index.ts
+import 'dotenv/config';
+import express, { type Request, type Response, type NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { assertDbConnection, sequelize } from "./sever_config";
+import { initModelsAndAssociations } from "./Models"; // charge modèles/associations
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+// 🔊 Logs d’amorçage
+console.log(`[BOOT] NODE_ENV=${process.env.NODE_ENV} PORT=${process.env.PORT || 5000}`);
+
+// Endpoint santé très tôt (avant tout)
+app.get("/api/health", (_req, res) => {
+  res.json({ ok: true, env: process.env.NODE_ENV, time: new Date().toISOString() });
+});
+
+// Logging middleware API
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
-  let capturedJsonResponse: Record<string, any> | undefined = undefined;
+  let capturedJsonResponse: Record<string, any> | undefined;
 
-  const originalResJson = res.json;
-  res.json = function (bodyJson, ...args) {
+  const originalResJson: (body: any, ...args: any[]) => Response = res.json.bind(res);
+  (res as any).json = function (bodyJson: any, ...args: any[]) {
     capturedJsonResponse = bodyJson;
-    return originalResJson.apply(res, [bodyJson, ...args]);
+    return originalResJson(bodyJson, ...args);
   };
 
   res.on("finish", () => {
@@ -22,50 +35,62 @@ app.use((req, res, next) => {
     if (path.startsWith("/api")) {
       let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
       if (capturedJsonResponse) {
-        logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
+        try { logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`; } catch {}
       }
-
-      if (logLine.length > 80) {
-        logLine = logLine.slice(0, 79) + "…";
-      }
-
-      log(logLine);
+      if (logLine.length > 200) logLine = logLine.slice(0, 199) + "…";
+      console.log(`[API] ${logLine}`);
     }
   });
 
   next();
 });
 
+// 🔒 Pièges à erreurs globales utiles en dev
+process.on("uncaughtException", (err) => {
+  console.error("[FATAL] uncaughtException:", err);
+});
+process.on("unhandledRejection", (reason) => {
+  console.error("[FATAL] unhandledRejection:", reason);
+});
+
 (async () => {
-  const server = await registerRoutes(app);
+  try {
+    // DB d’abord
+    await assertDbConnection();
+    initModelsAndAssociations();
+    console.log("[DB] connected");
 
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
+    if (process.env.NODE_ENV === "development") {
+      await sequelize.sync({ alter: true });
+      console.log("[DB] sequelize synced (alter=true)");
+    }
 
-    res.status(status).json({ message });
-    throw err;
-  });
+    // Enregistre routes applicatives
+    const server = await registerRoutes(app);
 
-  // importantly only setup vite in development and after
-  // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
-  if (app.get("env") === "development") {
-    await setupVite(app, server);
-  } else {
-    serveStatic(app);
+    // Middleware erreurs centralisé
+    app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+      const status = err.status || err.statusCode || 500;
+      const message = err.message || "Internal Server Error";
+      console.error("[ERROR]", status, message, err?.stack);
+      res.status(status).json({ message });
+    });
+
+    // Front: Vite en dev, static en prod
+    if (process.env.NODE_ENV === "development") {
+      await setupVite(app, server);
+      console.log("[VITE] dev middleware enabled");
+    } else {
+      serveStatic(app);
+      console.log("[STATIC] serving built files");
+    }
+
+    const port = parseInt(process.env.PORT || "5000", 10);
+    server.listen({ port, host: "0.0.0.0", reusePort: true }, () => {
+      console.log(`[BOOT] Server listening on http://localhost:${port}`);
+    });
+  } catch (e) {
+    console.error("[BOOT ERROR]", e);
+    process.exit(1);
   }
-
-  // ALWAYS serve the app on the port specified in the environment variable PORT
-  // Other ports are firewalled. Default to 5000 if not specified.
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
-  const port = parseInt(process.env.PORT || '5000', 10);
-  server.listen({
-    port,
-    host: "0.0.0.0",
-    reusePort: true,
-  }, () => {
-    log(`serving on port ${port}`);
-  });
 })();

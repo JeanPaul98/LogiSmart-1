@@ -5,21 +5,38 @@ import { useToast } from "@/hooks/use-toast";
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { 
-  User, 
-  Package, 
-  History, 
-  Download, 
+import {
+  User,
+  Package,
+  History,
+  Download,
   Bell,
   TrendingUp,
   LogOut,
   Settings,
   FileText,
-  BarChart3
+  BarChart3,
 } from "lucide-react";
 
+// Typage local sûr si useAuth() n'expose pas un type fort
+type MaybeUser =
+  | {
+      profileImageUrl?: string | null;
+      firstName?: string | null;
+      lastName?: string | null;
+      email?: string | null;
+    }
+  | null
+  | undefined;
+
 export default function Dashboard() {
-  const { user, isAuthenticated, isLoading } = useAuth();
+  // on caste localement la forme retournée pour éviter les 2339
+  const { user, isAuthenticated, isLoading } = useAuth() as {
+    user: MaybeUser;
+    isAuthenticated: boolean;
+    isLoading: boolean;
+  };
+
   const { t } = useLanguage();
   const { toast } = useToast();
 
@@ -30,10 +47,10 @@ export default function Dashboard() {
         description: "You are logged out. Logging in again...",
         variant: "destructive",
       });
-      setTimeout(() => {
+      const id = setTimeout(() => {
         window.location.href = "/api/login";
       }, 500);
-      return;
+      return () => clearTimeout(id);
     }
   }, [isAuthenticated, isLoading, toast]);
 
@@ -52,6 +69,11 @@ export default function Dashboard() {
     window.location.href = "/api/logout";
   };
 
+  const fullName =
+    (user?.firstName ?? "") + (user?.lastName ? ` ${user.lastName}` : "");
+  const displayName = fullName.trim() || t("dashboard.profile.defaultName");
+  const displayEmail = user?.email ?? "";
+
   return (
     <Layout>
       <div className="p-4 space-y-6">
@@ -59,11 +81,11 @@ export default function Dashboard() {
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center space-x-4">
-              <div className="bg-primary-100 w-16 h-16 rounded-full flex items-center justify-center">
+              <div className="bg-primary-100 w-16 h-16 rounded-full flex items-center justify-center overflow-hidden">
                 {user?.profileImageUrl ? (
-                  <img 
-                    src={user.profileImageUrl} 
-                    alt="Profile" 
+                  <img
+                    src={user.profileImageUrl}
+                    alt="Profile"
                     className="w-16 h-16 rounded-full object-cover"
                   />
                 ) : (
@@ -71,13 +93,8 @@ export default function Dashboard() {
                 )}
               </div>
               <div className="flex-1">
-                <h2 className="text-xl font-bold text-gray-900">
-                  {user?.firstName && user?.lastName 
-                    ? `${user.firstName} ${user.lastName}` 
-                    : t("dashboard.profile.defaultName")
-                  }
-                </h2>
-                <p className="text-gray-600">{user?.email}</p>
+                <h2 className="text-xl font-bold text-gray-900">{displayName}</h2>
+                <p className="text-gray-600">{displayEmail}</p>
                 <div className="flex items-center space-x-2 mt-2">
                   <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
                     {t("dashboard.profile.verified")}
@@ -96,7 +113,9 @@ export default function Dashboard() {
                 <Package className="w-6 h-6 text-primary-600" />
               </div>
               <p className="text-2xl font-bold text-primary-600">0</p>
-              <p className="text-sm text-gray-600">{t("dashboard.stats.totalShipments")}</p>
+              <p className="text-sm text-gray-600">
+                {t("dashboard.stats.totalShipments")}
+              </p>
             </CardContent>
           </Card>
           <Card>
@@ -105,7 +124,9 @@ export default function Dashboard() {
                 <TrendingUp className="w-6 h-6 text-green-600" />
               </div>
               <p className="text-2xl font-bold text-green-600">€0</p>
-              <p className="text-sm text-gray-600">{t("dashboard.stats.totalSaved")}</p>
+              <p className="text-sm text-gray-600">
+                {t("dashboard.stats.totalSaved")}
+              </p>
             </CardContent>
           </Card>
         </div>
@@ -120,17 +141,19 @@ export default function Dashboard() {
               <History className="w-4 h-4 mr-3 text-primary-600" />
               {t("dashboard.quickActions.shipmentHistory")}
             </Button>
-            
+
             <Button variant="outline" className="w-full justify-start" onClick={() => {}}>
               <FileText className="w-4 h-4 mr-3 text-secondary-600" />
               {t("dashboard.quickActions.documents")}
             </Button>
-            
+
             <Button variant="outline" className="w-full justify-start" onClick={() => {}}>
               <Bell className="w-4 h-4 mr-3 text-amber-600" />
               <div className="flex items-center justify-between w-full">
                 <span>{t("dashboard.quickActions.alerts")}</span>
-                <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">0</span>
+                <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                  0
+                </span>
               </div>
             </Button>
 
@@ -150,7 +173,9 @@ export default function Dashboard() {
             <div className="text-center py-8">
               <Package className="w-12 h-12 text-gray-300 mx-auto mb-4" />
               <p className="text-gray-500">{t("dashboard.recentActivity.empty")}</p>
-              <p className="text-sm text-gray-400 mt-2">{t("dashboard.recentActivity.emptySubtitle")}</p>
+              <p className="text-sm text-gray-400 mt-2">
+                {t("dashboard.recentActivity.emptySubtitle")}
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -165,15 +190,15 @@ export default function Dashboard() {
               <Settings className="w-4 h-4 mr-3 text-gray-600" />
               {t("dashboard.settings.preferences")}
             </Button>
-            
+
             <Button variant="outline" className="w-full justify-start" onClick={() => {}}>
               <Download className="w-4 h-4 mr-3 text-gray-600" />
               {t("dashboard.settings.exportData")}
             </Button>
-            
-            <Button 
-              variant="outline" 
-              className="w-full justify-start text-red-600 border-red-200 hover:bg-red-50" 
+
+            <Button
+              variant="outline"
+              className="w-full justify-start text-red-600 border-red-200 hover:bg-red-50"
               onClick={handleLogout}
             >
               <LogOut className="w-4 h-4 mr-3" />
