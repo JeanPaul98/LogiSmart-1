@@ -86,7 +86,7 @@ npm run db:push
 npm run dev
 ```
 
-L'application sera accessible sur `http://localhost:5000`
+L'application sera accessible sur `http://localhost:5005`
 
 ## 📱 Guide d'Utilisation
 

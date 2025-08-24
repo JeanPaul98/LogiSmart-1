@@ -1,0 +1,907 @@
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LogiSmart - Gestion Logistique Intelligente</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'inter': ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        'primary': {
+                            500: '#8B5CF6',
+                            600: '#7C3AED',
+                            700: '#6D28D9'
+                        },
+                        'secondary': {
+                            500: '#3B82F6',
+                            600: '#1D4ED8',
+                            700: '#1E40AF'
+                        },
+                        'accent': '#C4B5FD'
+                    }
+                }
+            }
+        };
+    </script>
+</head>
+<body class="font-inter bg-gray-50 text-gray-900">
+    <!-- @COMPONENT: MobileApp -->
+    <div class="max-w-md mx-auto bg-white min-h-screen relative">
+        
+        <!-- Header -->
+        <!-- @COMPONENT: AppHeader -->
+        <header class="bg-gradient-to-r from-primary-600 to-secondary-600 text-white p-4 shadow-lg">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <i class="fas fa-shipping-fast text-2xl"></i>
+                    <h1 class="text-xl font-bold">LogiSmart</h1>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <select class="bg-white/20 text-white text-sm rounded px-2 py-1 border-0" data-bind="language">
+                        <option>FR</option>
+                        <option>EN</option>
+                    </select>
+                    <button class="bg-white/20 p-2 rounded-full">
+                        <i class="fas fa-bell text-sm"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+        <!-- @END_COMPONENT: AppHeader -->
+
+        <!-- Main Content -->
+        <main class="pb-20">
+            
+            <!-- Welcome Section -->
+            <!-- @COMPONENT: WelcomeSection -->
+            <section class="bg-gradient-to-r from-primary-600 to-secondary-600 text-white px-4 py-6">
+                <div class="text-center">
+                    <h2 class="text-lg font-medium" data-bind="user.isAuthenticated ? `Bonjour, ${user.name}` : 'Bonjour, Invité'">Bonjour, Invité</h2>
+                    <p class="text-white/80 text-sm mt-1">Gérez vos envois en toute simplicité</p>
+                </div>
+                
+                <!-- Auth Buttons for guests -->
+                <div data-bind="!user.isAuthenticated" class="flex space-x-3 mt-4">
+                    <button class="flex-1 bg-white text-primary-600 py-2 px-4 rounded-lg font-medium text-sm" data-event="click:handleLogin">Se connecter</button>
+                    <button class="flex-1 border border-white text-white py-2 px-4 rounded-lg font-medium text-sm" data-event="click:handleRegister">S'inscrire</button>
+                </div>
+            </section>
+            <!-- @END_COMPONENT: WelcomeSection -->
+
+            <!-- Quick Tracking -->
+            <!-- @COMPONENT: QuickTracking -->
+            <section class="px-4 py-6 bg-white shadow-sm">
+                <h3 class="text-lg font-semibold mb-4">Suivi rapide</h3>
+                <div class="space-y-3">
+                    <div class="relative">
+                        <input type="text" placeholder="Numéro de suivi" 
+                               class="w-full pl-10 pr-12 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                               data-bind="trackingNumber">
+                        <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                        <button class="absolute right-3 top-1/2 transform -translate-y-1/2 text-primary-600" data-event="click:handleQRScan">
+                            <i class="fas fa-qrcode"></i>
+                        </button>
+                    </div>
+                    <button class="w-full bg-primary-600 text-white py-3 rounded-lg font-medium" data-event="click:handleTrackPackage">
+                        Suivre le colis
+                    </button>
+                </div>
+            </section>
+            <!-- @END_COMPONENT: QuickTracking -->
+
+            <!-- Quick Actions -->
+            <!-- @COMPONENT: QuickActions -->
+            <section class="px-4 py-6">
+                <h3 class="text-lg font-semibold mb-4">Accès rapide</h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <button class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 text-center" data-event="click:showTariffCalculator">
+                        <div class="bg-primary-100 w-12 h-12 rounded-lg flex items-center justify-center mx-auto mb-2">
+                            <i class="fas fa-calculator text-primary-600"></i>
+                        </div>
+                        <p class="text-sm font-medium text-gray-900">Obtenir un tarif</p>
+                    </button>
+                    
+                    <button class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 text-center" data-event="click:showCreateShipment">
+                        <div class="bg-secondary-100 w-12 h-12 rounded-lg flex items-center justify-center mx-auto mb-2">
+                            <i class="fas fa-plus-circle text-secondary-600"></i>
+                        </div>
+                        <p class="text-sm font-medium text-gray-900">Créer un envoi</p>
+                    </button>
+                    
+                    <button class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 text-center" data-event="click:showHSCodeSearch">
+                        <div class="bg-green-100 w-12 h-12 rounded-lg flex items-center justify-center mx-auto mb-2">
+                            <i class="fas fa-search text-green-600"></i>
+                        </div>
+                        <p class="text-sm font-medium text-gray-900">Code HS</p>
+                    </button>
+                    
+                    <button class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 text-center" data-event="click:showChatbot">
+                        <div class="bg-orange-100 w-12 h-12 rounded-lg flex items-center justify-center mx-auto mb-2">
+                            <i class="fas fa-robot text-orange-600"></i>
+                        </div>
+                        <p class="text-sm font-medium text-gray-900">Assistant IA</p>
+                    </button>
+                </div>
+            </section>
+            <!-- @END_COMPONENT: QuickActions -->
+
+            <!-- Recent Shipments -->
+            <!-- @COMPONENT: RecentShipments [data-bind="user.isAuthenticated"] -->
+            <section class="px-4 py-6 bg-white shadow-sm" data-bind="user.isAuthenticated">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold">Envois récents</h3>
+                    <button class="text-primary-600 text-sm font-medium" data-event="click:showAllShipments">Voir tout</button>
+                </div>
+                
+                <!-- @MAP: recentShipments.slice(0,3).map(shipment => ( -->
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between p-3 border border-gray-100 rounded-lg" data-mock="true">
+                        <div class="flex items-center space-x-3">
+                            <div class="bg-green-100 w-10 h-10 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-box text-green-600 text-sm"></i>
+                            </div>
+                            <div>
+                                <p class="font-medium text-sm" data-bind="shipment.trackingNumber">LS240001</p>
+                                <p class="text-gray-500 text-xs" data-bind="shipment.destination">Dakar → Paris</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full" data-bind="shipment.status">En transit</span>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center justify-between p-3 border border-gray-100 rounded-lg" data-mock="true">
+                        <div class="flex items-center space-x-3">
+                            <div class="bg-blue-100 w-10 h-10 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-box text-blue-600 text-sm"></i>
+                            </div>
+                            <div>
+                                <p class="font-medium text-sm" data-bind="shipment.trackingNumber">LS240002</p>
+                                <p class="text-gray-500 text-xs" data-bind="shipment.destination">Abidjan → Lyon</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full" data-bind="shipment.status">Dédouanement</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- @END_MAP )) -->
+            </section>
+            <!-- @END_COMPONENT: RecentShipments -->
+
+            <!-- Regulatory Alerts -->
+            <!-- @COMPONENT: RegulatoryAlerts -->
+            <section class="px-4 py-6">
+                <div class="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                    <div class="flex items-start space-x-3">
+                        <i class="fas fa-exclamation-triangle text-amber-600 mt-1"></i>
+                        <div>
+                            <h4 class="font-medium text-amber-800">Alerte réglementaire</h4>
+                            <p class="text-sm text-amber-700 mt-1" data-mock="true">
+                                Nouvelles réglementations douanières pour l'importation d'électronique en France.
+                            </p>
+                            <button class="text-amber-800 text-sm font-medium mt-2" data-event="click:showAlertDetails">
+                                En savoir plus →
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <!-- @END_COMPONENT: RegulatoryAlerts -->
+
+        </main>
+
+        <!-- Bottom Navigation -->
+        <!-- @COMPONENT: BottomNavigation -->
+        <nav class="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-md bg-white border-t border-gray-200 px-4 py-2">
+            <div class="flex justify-around">
+                <button class="flex flex-col items-center py-2 text-primary-600" data-route="home">
+                    <i class="fas fa-home text-lg"></i>
+                    <span class="text-xs mt-1">Accueil</span>
+                </button>
+                <button class="flex flex-col items-center py-2 text-gray-400" data-route="create">
+                    <i class="fas fa-plus-circle text-lg"></i>
+                    <span class="text-xs mt-1">Dépôt</span>
+                </button>
+                <button class="flex flex-col items-center py-2 text-gray-400" data-route="support">
+                    <i class="fas fa-headset text-lg"></i>
+                    <span class="text-xs mt-1">Service client</span>
+                </button>
+                <button class="flex flex-col items-center py-2 text-gray-400" data-route="account">
+                    <i class="fas fa-user text-lg"></i>
+                    <span class="text-xs mt-1">Compte</span>
+                </button>
+            </div>
+        </nav>
+        <!-- @END_COMPONENT: BottomNavigation -->
+
+    </div>
+    <!-- @END_COMPONENT: MobileApp -->
+
+    <!-- Modal Overlays -->
+    
+    <!-- Tariff Calculator Modal -->
+    <!-- @COMPONENT: TariffCalculatorModal [data-state="isModalOpen"] -->
+    <div id="tariffModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+        <div class="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-md bg-white rounded-t-2xl">
+            <div class="p-4 border-b border-gray-200">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-semibold">Calculateur de tarifs</h3>
+                    <button class="text-gray-400" data-event="click:closeTariffModal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="p-4 max-h-96 overflow-y-auto">
+                <!-- Transport Mode Selection -->
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-3">Mode de transport</label>
+                    <div class="grid grid-cols-3 gap-2">
+                        <button class="p-3 border-2 border-primary-600 bg-primary-50 rounded-lg text-center" data-bind="selectedTransport === 'air'">
+                            <i class="fas fa-plane text-primary-600 mb-1"></i>
+                            <p class="text-xs font-medium text-primary-600">Aérien</p>
+                        </button>
+                        <button class="p-3 border border-gray-200 rounded-lg text-center" data-bind="selectedTransport === 'road'">
+                            <i class="fas fa-truck text-gray-400 mb-1"></i>
+                            <p class="text-xs font-medium text-gray-600">Routier</p>
+                        </button>
+                        <button class="p-3 border border-gray-200 rounded-lg text-center" data-bind="selectedTransport === 'sea'">
+                            <i class="fas fa-ship text-gray-400 mb-1"></i>
+                            <p class="text-xs font-medium text-gray-600">Maritime</p>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Origin and Destination -->
+                <div class="space-y-4 mb-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Lieu d'enlèvement</label>
+                        <input type="text" placeholder="Ville de départ" class="w-full p-3 border border-gray-200 rounded-lg" data-bind="origin">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Lieu de livraison</label>
+                        <input type="text" placeholder="Ville de destination" class="w-full p-3 border border-gray-200 rounded-lg" data-bind="destination">
+                    </div>
+                </div>
+
+                <!-- Package Details -->
+                <div class="space-y-4 mb-6">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Poids (kg)</label>
+                            <input type="number" placeholder="0" class="w-full p-3 border border-gray-200 rounded-lg" data-bind="weight">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Volume (m³)</label>
+                            <input type="number" placeholder="0" class="w-full p-3 border border-gray-200 rounded-lg" data-bind="volume">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Results -->
+                <div class="bg-primary-50 p-4 rounded-lg mb-4" data-bind="calculatedTariff">
+                    <h4 class="font-semibold text-primary-800 mb-2">Tarif estimé</h4>
+                    <div class="space-y-2">
+                        <div class="flex justify-between text-sm">
+                            <span class="text-primary-700">Transport aérien:</span>
+                            <span class="font-medium text-primary-800" data-mock="true">€245</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-primary-700">Délai estimé:</span>
+                            <span class="font-medium text-primary-800" data-mock="true">3-5 jours</span>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="w-full bg-primary-600 text-white py-3 rounded-lg font-medium" data-event="click:proceedWithTariff">
+                    Continuer avec ce tarif
+                </button>
+            </div>
+        </div>
+    </div>
+    <!-- @END_COMPONENT: TariffCalculatorModal -->
+
+    <!-- Create Shipment Modal -->
+    <!-- @COMPONENT: CreateShipmentModal -->
+    <div id="createShipmentModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+        <div class="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-md bg-white rounded-t-2xl">
+            <div class="p-4 border-b border-gray-200">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-semibold">Créer un envoi</h3>
+                    <button class="text-gray-400" data-event="click:closeCreateShipmentModal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="p-4 max-h-96 overflow-y-auto">
+                <!-- Sender Information -->
+                <div class="mb-6">
+                    <h4 class="font-medium text-gray-900 mb-3">Expéditeur</h4>
+                    <div class="space-y-3">
+                        <input type="text" placeholder="Nom complet" class="w-full p-3 border border-gray-200 rounded-lg" data-bind="sender.name">
+                        <input type="email" placeholder="Email" class="w-full p-3 border border-gray-200 rounded-lg" data-bind="sender.email">
+                        <input type="text" placeholder="Adresse" class="w-full p-3 border border-gray-200 rounded-lg" data-bind="sender.address">
+                    </div>
+                </div>
+
+                <!-- Recipient Information -->
+                <div class="mb-6">
+                    <h4 class="font-medium text-gray-900 mb-3">Destinataire</h4>
+                    <div class="space-y-3">
+                        <input type="text" placeholder="Nom complet" class="w-full p-3 border border-gray-200 rounded-lg" data-bind="recipient.name">
+                        <input type="email" placeholder="Email" class="w-full p-3 border border-gray-200 rounded-lg" data-bind="recipient.email">
+                        <input type="text" placeholder="Adresse" class="w-full p-3 border border-gray-200 rounded-lg" data-bind="recipient.address">
+                    </div>
+                </div>
+
+                <!-- Package Information -->
+                <div class="mb-6">
+                    <h4 class="font-medium text-gray-900 mb-3">Colis</h4>
+                    <div class="space-y-3">
+                        <textarea placeholder="Description du contenu" class="w-full p-3 border border-gray-200 rounded-lg h-20" data-bind="package.description"></textarea>
+                        <div class="grid grid-cols-2 gap-3">
+                            <input type="number" placeholder="Poids (kg)" class="w-full p-3 border border-gray-200 rounded-lg" data-bind="package.weight">
+                            <input type="number" placeholder="Valeur (€)" class="w-full p-3 border border-gray-200 rounded-lg" data-bind="package.value">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Transport Selection -->
+                <div class="mb-6">
+                    <h4 class="font-medium text-gray-900 mb-3">Mode de transport</h4>
+                    <select class="w-full p-3 border border-gray-200 rounded-lg" data-bind="transport.mode">
+                        <option>Aérien Express - 3-5 jours</option>
+                        <option>Maritime Standard - 15-25 jours</option>
+                        <option>Routier Express - 7-10 jours</option>
+                    </select>
+                </div>
+
+                <button class="w-full bg-primary-600 text-white py-3 rounded-lg font-medium mb-3" data-event="click:createShipment">
+                    Créer l'envoi
+                </button>
+                
+                <div class="text-center">
+                    <span class="text-sm text-gray-500">Documents douaniers générés automatiquement</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- @END_COMPONENT: CreateShipmentModal -->
+
+    <!-- Package Tracking Modal -->
+    <!-- @COMPONENT: PackageTrackingModal -->
+    <div id="trackingModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+        <div class="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-md bg-white rounded-t-2xl">
+            <div class="p-4 border-b border-gray-200">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-semibold">Suivi de colis</h3>
+                    <button class="text-gray-400" data-event="click:closeTrackingModal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="p-4 max-h-96 overflow-y-auto">
+                <!-- Package Info -->
+                <div class="bg-gray-50 p-4 rounded-lg mb-4" data-mock="true">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="font-medium" data-bind="tracking.number">LS240001</span>
+                        <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full" data-bind="tracking.status">En transit</span>
+                    </div>
+                    <p class="text-sm text-gray-600" data-bind="tracking.route">Dakar → Paris</p>
+                </div>
+
+                <!-- Map Placeholder -->
+                <div class="bg-gray-100 h-32 rounded-lg flex items-center justify-center mb-4" data-mock="true">
+                    <!-- @FUNCTIONALITY: This should implement real-time tracking map using Google Maps or MapBox -->
+                    <div class="text-center">
+                        <i class="fas fa-map-marker-alt text-primary-600 text-2xl mb-2"></i>
+                        <p class="text-sm text-gray-600">Carte de suivi en temps réel</p>
+                    </div>
+                </div>
+
+                <!-- Timeline -->
+                <div class="space-y-4">
+                    <h4 class="font-medium">Historique de livraison</h4>
+                    
+                    <!-- @MAP: tracking.timeline.map(event => ( -->
+                    <div class="flex items-start space-x-3" data-mock="true">
+                        <div class="bg-green-500 w-3 h-3 rounded-full mt-2"></div>
+                        <div class="flex-1">
+                            <p class="font-medium text-sm" data-bind="event.status">Colis en transit</p>
+                            <p class="text-gray-500 text-xs" data-bind="event.location">Aéroport Charles de Gaulle</p>
+                            <p class="text-gray-400 text-xs" data-bind="event.timestamp">Aujourd'hui, 14:30</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-start space-x-3" data-mock="true">
+                        <div class="bg-green-500 w-3 h-3 rounded-full mt-2"></div>
+                        <div class="flex-1">
+                            <p class="font-medium text-sm">Dédouanement terminé</p>
+                            <p class="text-gray-500 text-xs">Douane française</p>
+                            <p class="text-gray-400 text-xs">Hier, 09:15</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-start space-x-3" data-mock="true">
+                        <div class="bg-gray-300 w-3 h-3 rounded-full mt-2"></div>
+                        <div class="flex-1">
+                            <p class="font-medium text-sm">Départ de Dakar</p>
+                            <p class="text-gray-500 text-xs">Aéroport Léopold Sédar Senghor</p>
+                            <p class="text-gray-400 text-xs">Il y a 2 jours, 22:45</p>
+                        </div>
+                    </div>
+                    <!-- @END_MAP )) -->
+                </div>
+
+                <!-- Documents -->
+                <div class="mt-6 pt-4 border-t border-gray-200">
+                    <h4 class="font-medium mb-3">Documents</h4>
+                    <div class="space-y-2">
+                        <button class="w-full flex items-center justify-between p-3 bg-gray-50 rounded-lg" data-event="click:downloadDocument" data-mock="true">
+                            <div class="flex items-center space-x-2">
+                                <i class="fas fa-file-pdf text-red-500"></i>
+                                <span class="text-sm">Facture commerciale</span>
+                            </div>
+                            <i class="fas fa-download text-gray-400 text-sm"></i>
+                        </button>
+                        <button class="w-full flex items-center justify-between p-3 bg-gray-50 rounded-lg" data-event="click:downloadDocument" data-mock="true">
+                            <div class="flex items-center space-x-2">
+                                <i class="fas fa-file-pdf text-red-500"></i>
+                                <span class="text-sm">Déclaration d'importation</span>
+                            </div>
+                            <i class="fas fa-download text-gray-400 text-sm"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Signature Section -->
+                <div class="mt-6 pt-4 border-t border-gray-200" data-bind="tracking.requiresSignature">
+                    <h4 class="font-medium mb-3">Signature électronique</h4>
+                    <div class="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg h-32 flex items-center justify-center" data-mock="true">
+                        <!-- @FUNCTIONALITY: This should implement electronic signature using canvas or third-party signature pad -->
+                        <div class="text-center">
+                            <i class="fas fa-signature text-gray-400 text-2xl mb-2"></i>
+                            <p class="text-sm text-gray-500">Zone de signature</p>
+                        </div>
+                    </div>
+                    <button class="w-full bg-secondary-600 text-white py-2 rounded-lg font-medium mt-3" data-event="click:saveSignature">
+                        Confirmer la réception
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- @END_COMPONENT: PackageTrackingModal -->
+
+    <!-- HS Code Search Modal -->
+    <!-- @COMPONENT: HSCodeSearchModal -->
+    <div id="hsCodeModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+        <div class="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-md bg-white rounded-t-2xl">
+            <div class="p-4 border-b border-gray-200">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-semibold">Recherche de code HS</h3>
+                    <button class="text-gray-400" data-event="click:closeHSCodeModal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="p-4 max-h-96 overflow-y-auto">
+                <!-- Search Input -->
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Description de la marchandise</label>
+                    <textarea placeholder="Ex: Téléphone mobile Android avec écran tactile..." 
+                              class="w-full p-3 border border-gray-200 rounded-lg h-20" 
+                              data-bind="hsSearch.description"></textarea>
+                </div>
+
+                <button class="w-full bg-primary-600 text-white py-3 rounded-lg font-medium mb-4" data-event="click:searchHSCode">
+                    Rechercher avec l'IA
+                </button>
+
+                <!-- Results -->
+                <div class="space-y-3" data-bind="hsSearch.results" data-mock="true">
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-3">
+                        <div class="flex items-start justify-between mb-2">
+                            <div>
+                                <span class="font-mono text-sm font-medium text-green-800">8517.12.00</span>
+                                <div class="flex items-center space-x-1 mt-1">
+                                    <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">98% de correspondance</span>
+                                </div>
+                            </div>
+                            <button class="text-green-600" data-event="click:selectHSCode">
+                                <i class="fas fa-check-circle"></i>
+                            </button>
+                        </div>
+                        <p class="text-sm text-gray-700 mb-2">Téléphones cellulaires et autres réseaux sans fil</p>
+                        <div class="text-xs text-gray-600">
+                            <p><strong>Taxe d'importation:</strong> 14%</p>
+                            <p><strong>TVA:</strong> 20%</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                        <div class="flex items-start justify-between mb-2">
+                            <div>
+                                <span class="font-mono text-sm font-medium text-gray-800">8517.11.00</span>
+                                <div class="flex items-center space-x-1 mt-1">
+                                    <span class="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded">75% de correspondance</span>
+                                </div>
+                            </div>
+                            <button class="text-gray-600" data-event="click:selectHSCode">
+                                <i class="fas fa-check-circle"></i>
+                            </button>
+                        </div>
+                        <p class="text-sm text-gray-700 mb-2">Téléphones pour réseaux filaires</p>
+                        <div class="text-xs text-gray-600">
+                            <p><strong>Taxe d'importation:</strong> 12%</p>
+                            <p><strong>TVA:</strong> 20%</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4 p-3 bg-blue-50 rounded-lg">
+                    <div class="flex items-start space-x-2">
+                        <i class="fas fa-info-circle text-blue-600 mt-1"></i>
+                        <div>
+                            <p class="text-sm text-blue-800 font-medium">Conseil douanier</p>
+                            <p class="text-xs text-blue-700 mt-1">
+                                Assurez-vous que votre téléphone dispose d'un certificat CE pour l'importation en Europe.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- @END_COMPONENT: HSCodeSearchModal -->
+
+    <!-- AI Chatbot Modal -->
+    <!-- @COMPONENT: AIChatbotModal -->
+    <div id="chatbotModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+        <div class="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-md bg-white rounded-t-2xl h-3/4 flex flex-col">
+            <div class="p-4 border-b border-gray-200">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="bg-gradient-to-r from-primary-500 to-secondary-500 w-10 h-10 rounded-full flex items-center justify-center">
+                            <i class="fas fa-robot text-white"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold">Assistant IA Douanier</h3>
+                            <p class="text-xs text-green-600">En ligne</p>
+                        </div>
+                    </div>
+                    <button class="text-gray-400" data-event="click:closeChatbotModal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Chat Messages -->
+            <div class="flex-1 overflow-y-auto p-4 space-y-3" data-bind="chatMessages">
+                <!-- Bot Welcome Message -->
+                <div class="flex items-start space-x-2" data-mock="true">
+                    <div class="bg-primary-500 w-8 h-8 rounded-full flex items-center justify-center">
+                        <i class="fas fa-robot text-white text-sm"></i>
+                    </div>
+                    <div class="bg-gray-100 p-3 rounded-lg rounded-tl-none max-w-xs">
+                        <p class="text-sm">Bonjour ! Je suis votre assistant douanier IA. Comment puis-je vous aider aujourd'hui ?</p>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="grid grid-cols-2 gap-2 my-3">
+                    <button class="bg-primary-50 border border-primary-200 p-2 rounded-lg text-xs text-primary-700" data-event="click:sendQuickMessage" data-message="Quelles sont les taxes d'importation ?">
+                        Taxes d'importation
+                    </button>
+                    <button class="bg-primary-50 border border-primary-200 p-2 rounded-lg text-xs text-primary-700" data-event="click:sendQuickMessage" data-message="Documents requis pour l'import">
+                        Documents requis
+                    </button>
+                    <button class="bg-primary-50 border border-primary-200 p-2 rounded-lg text-xs text-primary-700" data-event="click:sendQuickMessage" data-message="Délais de dédouanement">
+                        Délais de traitement
+                    </button>
+                    <button class="bg-primary-50 border border-primary-200 p-2 rounded-lg text-xs text-primary-700" data-event="click:sendQuickMessage" data-message="Produits interdits">
+                        Produits interdits
+                    </button>
+                </div>
+
+                <!-- Sample conversation -->
+                <!-- @MAP: chatHistory.map(message => ( -->
+                <div class="flex items-start space-x-2 justify-end" data-mock="true">
+                    <div class="bg-primary-600 text-white p-3 rounded-lg rounded-tr-none max-w-xs">
+                        <p class="text-sm">Quelles sont les taxes pour importer des téléphones depuis la Chine ?</p>
+                    </div>
+                </div>
+
+                <div class="flex items-start space-x-2" data-mock="true">
+                    <div class="bg-primary-500 w-8 h-8 rounded-full flex items-center justify-center">
+                        <i class="fas fa-robot text-white text-sm"></i>
+                    </div>
+                    <div class="bg-gray-100 p-3 rounded-lg rounded-tl-none max-w-xs">
+                        <p class="text-sm">Pour l'importation de téléphones depuis la Chine vers la France :</p>
+                        <ul class="text-sm mt-2 space-y-1">
+                            <li>• <strong>Droits de douane :</strong> 14%</li>
+                            <li>• <strong>TVA :</strong> 20%</li>
+                            <li>• <strong>Code HS :</strong> 8517.12.00</li>
+                        </ul>
+                        <p class="text-sm mt-2">Documents requis : facture, certificat CE, déclaration d'origine.</p>
+                    </div>
+                </div>
+                <!-- @END_MAP )) -->
+            </div>
+
+            <!-- Message Input -->
+            <div class="p-4 border-t border-gray-200">
+                <div class="flex items-center space-x-2">
+                    <div class="flex-1 relative">
+                        <input type="text" placeholder="Tapez votre message..." 
+                               class="w-full p-3 pr-10 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                               data-bind="chatInput">
+                        <button class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" data-event="click:attachFile">
+                            <i class="fas fa-paperclip"></i>
+                        </button>
+                    </div>
+                    <button class="bg-primary-600 text-white p-3 rounded-lg" data-event="click:sendMessage">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- @END_COMPONENT: AIChatbotModal -->
+
+    <!-- User Dashboard Modal -->
+    <!-- @COMPONENT: UserDashboardModal -->
+    <div id="dashboardModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+        <div class="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-md bg-white rounded-t-2xl h-3/4 flex flex-col">
+            <div class="p-4 border-b border-gray-200">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-semibold">Tableau de bord</h3>
+                    <button class="text-gray-400" data-event="click:closeDashboardModal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="flex-1 overflow-y-auto p-4">
+                <!-- Statistics Cards -->
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div class="bg-primary-50 p-4 rounded-lg text-center" data-mock="true">
+                        <p class="text-2xl font-bold text-primary-600" data-bind="stats.totalShipments">23</p>
+                        <p class="text-sm text-primary-700">Envois totaux</p>
+                    </div>
+                    <div class="bg-green-50 p-4 rounded-lg text-center" data-mock="true">
+                        <p class="text-2xl font-bold text-green-600" data-bind="stats.totalSaved">€2,341</p>
+                        <p class="text-sm text-green-700">Économies réalisées</p>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="mb-6">
+                    <h4 class="font-medium text-gray-900 mb-3">Actions rapides</h4>
+                    <div class="space-y-2">
+                        <button class="w-full flex items-center justify-between p-3 bg-white border border-gray-200 rounded-lg" data-event="click:showShipmentHistory">
+                            <div class="flex items-center space-x-3">
+                                <i class="fas fa-history text-primary-600"></i>
+                                <span class="font-medium">Historique des envois</span>
+                            </div>
+                            <i class="fas fa-chevron-right text-gray-400"></i>
+                        </button>
+                        
+                        <button class="w-full flex items-center justify-between p-3 bg-white border border-gray-200 rounded-lg" data-event="click:showDocuments">
+                            <div class="flex items-center space-x-3">
+                                <i class="fas fa-file-download text-secondary-600"></i>
+                                <span class="font-medium">Documents téléchargeables</span>
+                            </div>
+                            <i class="fas fa-chevron-right text-gray-400"></i>
+                        </button>
+                        
+                        <button class="w-full flex items-center justify-between p-3 bg-white border border-gray-200 rounded-lg" data-event="click:showAlerts">
+                            <div class="flex items-center space-x-3">
+                                <i class="fas fa-bell text-amber-600"></i>
+                                <span class="font-medium">Alertes douanières</span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span class="bg-red-500 text-white text-xs px-2 py-1 rounded-full" data-bind="alerts.count">3</span>
+                                <i class="fas fa-chevron-right text-gray-400"></i>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="mb-6">
+                    <h4 class="font-medium text-gray-900 mb-3">Activité récente</h4>
+                    <div class="space-y-3">
+                        <!-- @MAP: recentActivity.map(activity => ( -->
+                        <div class="flex items-start space-x-3" data-mock="true">
+                            <div class="bg-green-100 w-8 h-8 rounded-full flex items-center justify-center">
+                                <i class="fas fa-check text-green-600 text-xs"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-sm font-medium" data-bind="activity.title">Colis LS240001 livré</p>
+                                <p class="text-xs text-gray-500" data-bind="activity.timestamp">Il y a 2 heures</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-start space-x-3" data-mock="true">
+                            <div class="bg-blue-100 w-8 h-8 rounded-full flex items-center justify-center">
+                                <i class="fas fa-file text-blue-600 text-xs"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-sm font-medium">Documents LS240002 générés</p>
+                                <p class="text-xs text-gray-500">Hier à 15:30</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-start space-x-3" data-mock="true">
+                            <div class="bg-amber-100 w-8 h-8 rounded-full flex items-center justify-center">
+                                <i class="fas fa-exclamation text-amber-600 text-xs"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-sm font-medium">Nouvelle réglementation UE</p>
+                                <p class="text-xs text-gray-500">Il y a 3 jours</p>
+                            </div>
+                        </div>
+                        <!-- @END_MAP )) -->
+                    </div>
+                </div>
+
+                <!-- Monthly Chart -->
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <h4 class="font-medium text-gray-900 mb-3">Envois mensuels</h4>
+                    <div class="bg-white h-32 rounded flex items-center justify-center" data-mock="true">
+                        <!-- @FUNCTIONALITY: This should implement a real chart using Chart.js or similar -->
+                        <div class="text-center">
+                            <i class="fas fa-chart-line text-primary-600 text-2xl mb-2"></i>
+                            <p class="text-sm text-gray-600">Graphique des statistiques</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- @END_COMPONENT: UserDashboardModal -->
+
+    <script>
+        // TODO: Implement business logic, API calls, and state management
+        (function() {
+            'use strict';
+            
+            // Modal Management
+            const modals = {
+                tariff: document.getElementById('tariffModal'),
+                createShipment: document.getElementById('createShipmentModal'),
+                tracking: document.getElementById('trackingModal'),
+                hsCode: document.getElementById('hsCodeModal'),
+                chatbot: document.getElementById('chatbotModal'),
+                dashboard: document.getElementById('dashboardModal')
+            };
+
+            // Show/Hide Modal Functions
+            function showModal(modalName) {
+                if (modals[modalName]) {
+                    modals[modalName].classList.remove('hidden');
+                    document.body.style.overflow = 'hidden';
+                }
+            }
+
+            function hideModal(modalName) {
+                if (modals[modalName]) {
+                    modals[modalName].classList.add('hidden');
+                    document.body.style.overflow = 'auto';
+                }
+            }
+
+            // Event Listeners for Quick Actions
+            document.addEventListener('click', function(e) {
+                const target = e.target.closest('button');
+                if (!target) return;
+
+                // Quick action buttons
+                if (target.getAttribute('data-event') === 'click:showTariffCalculator') {
+                    showModal('tariff');
+                } else if (target.getAttribute('data-event') === 'click:showCreateShipment') {
+                    showModal('createShipment');
+                } else if (target.getAttribute('data-event') === 'click:showHSCodeSearch') {
+                    showModal('hsCode');
+                } else if (target.getAttribute('data-event') === 'click:showChatbot') {
+                    showModal('chatbot');
+                } else if (target.getAttribute('data-event') === 'click:handleTrackPackage') {
+                    showModal('tracking');
+                }
+
+                // Modal close buttons
+                else if (target.getAttribute('data-event') === 'click:closeTariffModal') {
+                    hideModal('tariff');
+                } else if (target.getAttribute('data-event') === 'click:closeCreateShipmentModal') {
+                    hideModal('createShipment');
+                } else if (target.getAttribute('data-event') === 'click:closeTrackingModal') {
+                    hideModal('tracking');
+                } else if (target.getAttribute('data-event') === 'click:closeHSCodeModal') {
+                    hideModal('hsCode');
+                } else if (target.getAttribute('data-event') === 'click:closeChatbotModal') {
+                    hideModal('chatbot');
+                } else if (target.getAttribute('data-event') === 'click:closeDashboardModal') {
+                    hideModal('dashboard');
+                }
+
+                // Navigation
+                else if (target.getAttribute('data-route') === 'account') {
+                    showModal('dashboard');
+                }
+
+                // Chatbot quick messages
+                else if (target.getAttribute('data-event') === 'click:sendQuickMessage') {
+                    const message = target.getAttribute('data-message');
+                    console.log('Sending quick message:', message);
+                    // TODO: Implement chatbot message sending
+                }
+            });
+
+            // Close modals when clicking overlay
+            Object.values(modals).forEach(modal => {
+                if (modal) {
+                    modal.addEventListener('click', function(e) {
+                        if (e.target === modal) {
+                            const modalName = Object.keys(modals).find(key => modals[key] === modal);
+                            hideModal(modalName);
+                        }
+                    });
+                }
+            });
+
+            // Bottom Navigation State Management
+            const navButtons = document.querySelectorAll('[data-route]');
+            navButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    // Remove active class from all buttons
+                    navButtons.forEach(btn => {
+                        btn.classList.remove('text-primary-600');
+                        btn.classList.add('text-gray-400');
+                    });
+                    
+                    // Add active class to clicked button
+                    this.classList.remove('text-gray-400');
+                    this.classList.add('text-primary-600');
+                });
+            });
+
+            // Transport mode selection in tariff calculator
+            document.addEventListener('click', function(e) {
+                const transportButton = e.target.closest('button[data-bind*="selectedTransport"]');
+                if (transportButton && transportButton.closest('#tariffModal')) {
+                    const allButtons = document.querySelectorAll('#tariffModal button[data-bind*="selectedTransport"]');
+                    allButtons.forEach(btn => {
+                        btn.classList.remove('border-primary-600', 'bg-primary-50');
+                        btn.classList.add('border-gray-200');
+                        btn.querySelector('i').classList.remove('text-primary-600');
+                        btn.querySelector('i').classList.add('text-gray-400');
+                        btn.querySelector('p').classList.remove('text-primary-600');
+                        btn.querySelector('p').classList.add('text-gray-600');
+                    });
+                    
+                    transportButton.classList.add('border-primary-600', 'bg-primary-50');
+                    transportButton.classList.remove('border-gray-200');
+                    transportButton.querySelector('i').classList.add('text-primary-600');
+                    transportButton.querySelector('i').classList.remove('text-gray-400');
+                    transportButton.querySelector('p').classList.add('text-primary-600');
+                    transportButton.querySelector('p').classList.remove('text-gray-600');
+                }
+            });
+
+            console.log('LogiSmart App Initialized');
+        })();
+    </script>
+</body>
+</html>
