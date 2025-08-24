@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -37,25 +36,52 @@ const createShipmentSchema = z.object({
 
 type CreateShipmentForm = z.infer<typeof createShipmentSchema>;
 
+// Typage local sûr si useAuth() n'expose pas un type fort
+type MaybeUser =
+  | {
+    firstName?: string | null;
+    lastName?: string | null;
+    email?: string | null;
+  }
+  | null
+  | undefined;
+
 export default function CreateShipment() {
-  const { user } = useAuth();
+  const { user } = useAuth() as { user: MaybeUser };
   const { t } = useLanguage();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
 
+  // Valeurs par défaut sûres (toujours des strings)
+  const defaultSenderName =
+    (user?.firstName ?? "") + (user?.lastName ? ` ${user.lastName}` : "");
+  const defaultSenderEmail = user?.email ?? "";
+
   const form = useForm<CreateShipmentForm>({
     resolver: zodResolver(createShipmentSchema),
     defaultValues: {
-      senderName: user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : "",
-      senderEmail: user?.email || "",
+      senderName: defaultSenderName,
+      senderEmail: defaultSenderEmail,
+      senderAddress: "",
+      senderPhone: "",
+      recipientName: "",
+      recipientEmail: "",
+      recipientAddress: "",
+      recipientPhone: "",
+      description: "",
+      weight: "",
+      volume: "",
+      value: "",
       transportMode: "air",
+      originCity: "",
+      destinationCity: "",
     },
   });
 
   const createShipmentMutation = useMutation({
     mutationFn: async (data: CreateShipmentForm) => {
-      const response = await apiRequest('POST', '/api/shipments', {
+      const response = await apiRequest("POST", "/api/shipments", {
         ...data,
         weight: parseFloat(data.weight),
         volume: data.volume ? parseFloat(data.volume) : null,
@@ -63,18 +89,19 @@ export default function CreateShipment() {
       });
       return response.json();
     },
-    onSuccess: (shipment) => {
-      queryClient.invalidateQueries({ queryKey: ['/api/shipments'] });
+    onSuccess: (shipment: { trackingNumber: string }) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/shipments"] });
       toast({
         title: t("shipment.created.title"),
         description: `${t("shipment.created.description")} ${shipment.trackingNumber}`,
       });
       setLocation("/");
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast({
         title: t("errors.shipment.create"),
-        description: error.message,
+        // ⬇️ remplace "errors.generic" par un fallback existant
+        description: error?.message ?? t("errors.shipment.create"),
         variant: "destructive",
       });
     },
@@ -147,7 +174,9 @@ export default function CreateShipment() {
                   name="senderPhone"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t("shipment.sender.phone")} ({t("optional")})</FormLabel>
+                      <FormLabel>
+                        {t("shipment.sender.phone")} ({t("optional")})
+                      </FormLabel>
                       <FormControl>
                         <Input placeholder={t("placeholders.phone")} {...field} />
                       </FormControl>
@@ -211,7 +240,9 @@ export default function CreateShipment() {
                   name="recipientPhone"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t("shipment.recipient.phone")} ({t("optional")})</FormLabel>
+                      <FormLabel>
+                        {t("shipment.recipient.phone")} ({t("optional")})
+                      </FormLabel>
                       <FormControl>
                         <Input placeholder={t("placeholders.phone")} {...field} />
                       </FormControl>
@@ -277,7 +308,9 @@ export default function CreateShipment() {
                   name="volume"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t("shipment.package.volume")} (m³) ({t("optional")})</FormLabel>
+                      <FormLabel>
+                        {t("shipment.package.volume")} (m³) ({t("optional")})
+                      </FormLabel>
                       <FormControl>
                         <Input type="number" step="0.001" placeholder="0.000" {...field} />
                       </FormControl>
@@ -307,9 +340,15 @@ export default function CreateShipment() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="air">{t("transport.air")} - 3-5 {t("days")}</SelectItem>
-                          <SelectItem value="sea">{t("transport.sea")} - 15-25 {t("days")}</SelectItem>
-                          <SelectItem value="road">{t("transport.road")} - 7-10 {t("days")}</SelectItem>
+                          <SelectItem value="air">
+                            {t("transport.air")} - 3-5 {t("days")}
+                          </SelectItem>
+                          <SelectItem value="sea">
+                            {t("transport.sea")} - 15-25 {t("days")}
+                          </SelectItem>
+                          <SelectItem value="road">
+                            {t("transport.road")} - 7-10 {t("days")}
+                          </SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -347,8 +386,8 @@ export default function CreateShipment() {
               </CardContent>
             </Card>
 
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               className="w-full bg-primary-600 hover:bg-primary-700"
               disabled={createShipmentMutation.isPending}
             >

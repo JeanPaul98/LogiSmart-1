@@ -22,6 +22,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Shipment routes
+  // Shipment routes
   app.post('/api/shipments', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
@@ -31,14 +32,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       const shipment = await storage.createShipment(shipmentData);
-      
-      // Add initial tracking event
+
+      // ✅ BORNER l’ID (number) avant de l’utiliser
+      // après la création du shipment
+      const shipmentId = typeof shipment.id === 'number' ? shipment.id : Number(shipment.id);
+      if (!Number.isFinite(shipmentId)) {
+        console.error("Shipment created without numeric id:", shipment.id);
+        return res.status(500).json({ message: "Shipment created but ID is invalid" });
+      }
+
       await storage.addTrackingEvent({
-        shipmentId: shipment.id,
-        status: 'Shipment created',
+        shipmentId,
+        status: 'confirmed',                // statut valide de ton enum
         location: shipment.originCity,
         description: 'Shipment has been registered in the system',
+        timestamp: new Date(),              // ✅ AJOUTÉ pour satisfaire le type InsertTrackingEvent
       });
+
       
       res.json(shipment);
     } catch (error) {
@@ -79,21 +89,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Tracking routes
+  // Tracking routes
   app.get('/api/tracking/:trackingNumber', async (req, res) => {
     try {
       const shipment = await storage.getShipmentByTracking(req.params.trackingNumber);
       if (!shipment) {
         return res.status(404).json({ message: "Tracking number not found" });
       }
+
+      // ✅ BORNER l’ID
+      const shipmentId = typeof shipment.id === 'number' ? shipment.id : Number(shipment.id);
+      if (!Number.isFinite(shipmentId)) {
+        return res.status(500).json({ message: "Invalid shipment id" });
+      }
       
-      const trackingEvents = await storage.getShipmentTracking(shipment.id);
-      const documents = await storage.getShipmentDocuments(shipment.id);
+      const trackingEvents = await storage.getShipmentTracking(shipmentId);
+      const documents = await storage.getShipmentDocuments(shipmentId);
       
-      res.json({
-        shipment,
-        trackingEvents,
-        documents,
-      });
+      res.json({ shipment, trackingEvents, documents });
     } catch (error) {
       console.error("Error tracking shipment:", error);
       res.status(500).json({ message: "Failed to track shipment" });
@@ -102,12 +115,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/tracking/:shipmentId/events', isAuthenticated, async (req: any, res) => {
     try {
-      const shipmentId = req.params.shipmentId;
       const eventData = insertTrackingEventSchema.parse({
         ...req.body,
-        shipmentId,
+        shipmentId: req.params.shipmentId, // z.coerce.number() va convertir
       });
-      
       const trackingEvent = await storage.addTrackingEvent(eventData);
       res.json(trackingEvent);
     } catch (error) {
