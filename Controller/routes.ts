@@ -1,7 +1,16 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./storage";
-import { setupAuth, isAuthenticated } from "./replitAuth";
+import { storage } from "../Services/storage";
+
+import {shipment} from "../Services/ShipmentService"
+import {alert} from "../Services/AlertService"
+import {chat} from "../Services/ChatService"
+import {document} from "../Services/DocumentService"
+import {hscode} from "../Services/HSCodeService"
+import {tracking} from "../Services/TrackingServie"
+import {user} from "../Services/UserService"
+
+import { setupAuth, isAuthenticated } from "../Auth/replitAuth";
 import { insertShipmentSchema, insertTrackingEventSchema, insertChatMessageSchema } from "@shared/schema";
 import { z } from "zod";
 
@@ -22,7 +31,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Shipment routes
-  // Shipment routes
   app.post('/api/shipments', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
@@ -30,26 +38,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...req.body,
         userId,
       });
-      
-      const shipment = await storage.createShipment(shipmentData);
+
+      const shipments = await shipment.createShipment(shipmentData);
 
       // ✅ BORNER l’ID (number) avant de l’utiliser
       // après la création du shipment
-      const shipmentId = typeof shipment.id === 'number' ? shipment.id : Number(shipment.id);
+      const shipmentId = typeof shipments.id === 'number' ? shipments.id : Number(shipments.id);
       if (!Number.isFinite(shipmentId)) {
-        console.error("Shipment created without numeric id:", shipment.id);
+        console.error("Shipment created without numeric id:", shipments.id);
         return res.status(500).json({ message: "Shipment created but ID is invalid" });
       }
 
       await storage.addTrackingEvent({
         shipmentId,
         status: 'confirmed',                // statut valide de ton enum
-        location: shipment.originCity,
+        location: shipments.originCity,
         description: 'Shipment has been registered in the system',
         timestamp: new Date(),              // ✅ AJOUTÉ pour satisfaire le type InsertTrackingEvent
       });
 
-      
+
       res.json(shipment);
     } catch (error) {
       console.error("Error creating shipment:", error);
@@ -60,8 +68,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/shipments', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      const shipments = await storage.getUserShipments(userId);
-      res.json(shipments);
+      const ship = await shipment.getUserShipments(userId);
+      res.json(ship);
     } catch (error) {
       console.error("Error fetching shipments:", error);
       res.status(500).json({ message: "Failed to fetch shipments" });
@@ -70,18 +78,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/shipments/:id', isAuthenticated, async (req: any, res) => {
     try {
-      const shipment = await storage.getShipment(req.params.id);
-      if (!shipment) {
+      const ship = await shipment.getShipment(req.params.id);
+      if (!ship) {
         return res.status(404).json({ message: "Shipment not found" });
       }
-      
+
       // Verify ownership
       const userId = req.user.claims.sub;
-      if (shipment.userId !== userId) {
+      if (ship.userId !== userId) {
         return res.status(403).json({ message: "Access denied" });
       }
-      
-      res.json(shipment);
+
+      res.json(ship);
     } catch (error) {
       console.error("Error fetching shipment:", error);
       res.status(500).json({ message: "Failed to fetch shipment" });
@@ -102,10 +110,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!Number.isFinite(shipmentId)) {
         return res.status(500).json({ message: "Invalid shipment id" });
       }
-      
+
       const trackingEvents = await storage.getShipmentTracking(shipmentId);
       const documents = await storage.getShipmentDocuments(shipmentId);
-      
+
       res.json({ shipment, trackingEvents, documents });
     } catch (error) {
       console.error("Error tracking shipment:", error);
@@ -131,7 +139,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/calculate-tariff', async (req, res) => {
     try {
       const { origin, destination, weight, volume, transportMode } = req.body;
-      
+
       // Basic tariff calculation logic
       let baseCost = 0;
       switch (transportMode) {
@@ -147,11 +155,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         default:
           baseCost = weight * 5;
       }
-      
+
       // Add distance factor (simplified)
       const distanceFactor = 1.2;
       const totalCost = Math.round(baseCost * distanceFactor * 100) / 100;
-      
+
       // Estimated delivery time
       let estimatedDays = 0;
       switch (transportMode) {
@@ -165,7 +173,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           estimatedDays = Math.floor(Math.random() * 4) + 7; // 7-10 days
           break;
       }
-      
+
       res.json({
         totalCost,
         transportMode,
@@ -190,7 +198,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!query || typeof query !== 'string') {
         return res.status(400).json({ message: "Query parameter required" });
       }
-      
+
       const hsCodes = await storage.searchHSCodes(query);
       res.json(hsCodes);
     } catch (error) {
@@ -228,7 +236,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       const { sessionId, content } = req.body;
-      
+
       // Add user message
       const userMessage = await storage.addChatMessage({
         userId,
@@ -236,10 +244,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         role: 'user',
         content,
       });
-      
+
       // Generate AI response (simplified)
       let aiResponse = "Je suis désolé, je ne peux pas traiter votre demande pour le moment. Veuillez contacter notre service client.";
-      
+
       if (content.toLowerCase().includes('taxe') || content.toLowerCase().includes('tax')) {
         aiResponse = "Les taxes d'importation varient selon le produit et le pays d'origine. Pour obtenir des informations précises, veuillez utiliser notre recherche de codes HS ou fournir plus de détails sur votre marchandise.";
       } else if (content.toLowerCase().includes('délai') || content.toLowerCase().includes('time')) {
@@ -247,7 +255,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } else if (content.toLowerCase().includes('document')) {
         aiResponse = "Les documents requis pour l'importation incluent généralement :\n• Facture commerciale\n• Déclaration en douane\n• Certificat d'origine\n• Documents spécifiques selon le produit (CE, sanitaire, etc.)";
       }
-      
+
       // Add AI response
       const assistantMessage = await storage.addChatMessage({
         userId,
@@ -255,7 +263,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         role: 'assistant',
         content: aiResponse,
       });
-      
+
       res.json({
         userMessage,
         assistantMessage,
@@ -270,7 +278,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       const sessionId = req.params.sessionId;
-      
+
       const messages = await storage.getChatHistory(userId, sessionId);
       res.json(messages);
     } catch (error) {

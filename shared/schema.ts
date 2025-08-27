@@ -30,6 +30,7 @@ export type Session = z.infer<typeof sessionSchema>;
 export const userSchema = z.object({
   id: z.string().uuid().optional(),
   email: z.string().email().optional().nullable(),
+  password: z.string(),
   firstName: z.string().optional().nullable(),
   lastName: z.string().optional().nullable(),
   profileImageUrl: z.string().url().optional().nullable(),

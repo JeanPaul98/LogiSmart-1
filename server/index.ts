@@ -1,10 +1,11 @@
 // server/index.ts
 import 'dotenv/config';
 import express, { type Request, type Response, type NextFunction } from "express";
-import { registerRoutes } from "./routes";
+import { registerRoutes } from "../Controller/routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { assertDbConnection, sequelize } from "./sever_config";
-import { initModelsAndAssociations } from "./Models"; // charge modèles/associations
+import { initModelsAndAssociations } from "../Models"; // charge modèles/associations
+
 
 const app = express();
 app.use(express.json());
@@ -35,7 +36,7 @@ app.use((req, res, next) => {
     if (path.startsWith("/api")) {
       let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
       if (capturedJsonResponse) {
-        try { logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`; } catch {}
+        try { logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`; } catch { }
       }
       if (logLine.length > 200) logLine = logLine.slice(0, 199) + "…";
       console.log(`[API] ${logLine}`);
