@@ -1,9 +1,9 @@
 // server/index.ts
 import 'dotenv/config';
 import express, { type Request, type Response, type NextFunction } from "express";
-import { registerRoutes } from "../Controller/routes";
 import { setupVite, serveStatic, log } from "./vite";
-import { assertDbConnection, sequelize } from "./sever_config";
+import { routes } from "../Routes/routes";
+import { assertDbConnection, sequelize, createDatabaseIfNotExists } from "./db_config";
 import { initModelsAndAssociations } from "../Models"; // charge modèles/associations
 
 
@@ -56,6 +56,8 @@ process.on("unhandledRejection", (reason) => {
 
 (async () => {
   try {
+    // Crée la base si besoin avant de se connecter
+    await createDatabaseIfNotExists();
     // DB d’abord
     await assertDbConnection();
     initModelsAndAssociations();
@@ -67,7 +69,7 @@ process.on("unhandledRejection", (reason) => {
     }
 
     // Enregistre routes applicatives
-    const server = await registerRoutes(app);
+    const server = await routes(app);
 
     // Middleware erreurs centralisé
     app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {

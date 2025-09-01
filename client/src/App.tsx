@@ -6,11 +6,12 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import Home from "@/pages/Home";
-import Landing from "@/pages/Landing";
+import Register from "@/pages/Register";
 import CreateShipment from "@/pages/CreateShipment";
 import Dashboard from "@/pages/Dashboard";
 import Support from "@/pages/Support";
 import NotFound from "@/pages/not-found";
+import Auth from "@/pages/login";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -27,19 +28,22 @@ function Router() {
   }
 
   return (
-    <Switch>
-      {!isAuthenticated ? (
-        <Route path="/" component={Landing} />
-      ) : (
-        <>
-          <Route path="/" component={Home} />
-          <Route path="/create" component={CreateShipment} />
-          <Route path="/dashboard" component={Dashboard} />
-          <Route path="/support" component={Support} />
-        </>
-      )}
-      <Route component={NotFound} />
-    </Switch>
+<Switch>
+  {!isAuthenticated ? (
+    <>
+      <Route path="/" component={Auth} />
+      <Route path="/register" component={Register} />
+    </>
+  ) : (
+    <>
+      <Route path="/" component={Home} />
+      <Route path="/create" component={CreateShipment} />
+      <Route path="/dashboard" component={Dashboard} />
+      <Route path="/support" component={Support} />
+    </>
+  )}
+  <Route component={NotFound} />
+</Switch>
   );
 }
 

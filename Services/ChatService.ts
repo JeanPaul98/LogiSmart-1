@@ -1,28 +1,12 @@
 // src/server/storage.sequelize.ts
 import { Op } from "sequelize";
 import {
-  User as UserModel,
-  Shipment as ShipmentModel,
-  TrackingEvent as TrackingEventModel,
-  Document as DocumentModel,
-  HSCode as HSCodeModel,
-  Alert as RegulatoryAlertModel,
   ChatMessage as ChatMessageModel,
 } from "../Models";
 
 import {
-  type User,
-  type UpsertUser,
-  type InsertShipment,
-  type Shipment,
-  type InsertTrackingEvent,
-  type TrackingEvent,
-  type InsertDocument,
-  type Document,
-  type HSCode,
   type InsertChatMessage,
   type ChatMessage,
-  type RegulatoryAlert,
 } from "@shared/schema";
 
 import { IStorage } from "../Interface/IStorage";
@@ -52,4 +36,4 @@ export class ChatService implements IChat {
     }
 }
 
-export const chat = new ChatService();
+export const chatService = new ChatService();

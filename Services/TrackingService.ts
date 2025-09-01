@@ -38,6 +38,12 @@ const toNum = (v: number | string) => {
 export class TrackingService implements ITracking {
 
     // TRACKING
+
+    async getShipmentByTracking(trackingNumber: string): Promise<Shipment | undefined> {
+      const s = await ShipmentModel.findOne({ where: { trackingNumber } });
+      return s?.toJSON() as Shipment | undefined;
+    }
+
     async addTrackingEvent(event: InsertTrackingEvent): Promise<TrackingEvent> {
       // s’assurer que shipmentId est numérique
       const shipmentId = toNum(event.shipmentId as number | string);

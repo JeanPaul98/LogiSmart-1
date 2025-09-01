@@ -1,5 +1,5 @@
 // server/Models/index.ts
-import { sequelize } from "../server/sever_config";
+import { sequelize } from "../server/db_config";
 import { DataTypes, Model, InferAttributes, InferCreationAttributes, CreationOptional } from "sequelize";
 
 /* ========== MODELS ========== */

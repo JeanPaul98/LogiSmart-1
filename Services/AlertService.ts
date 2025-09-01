@@ -1,15 +1,6 @@
 // src/server/storage.sequelize.ts
-import { Op } from "sequelize";
-import {
-  Alert as RegulatoryAlertModel,
-
-} from "../Models";
-
-import {
-  type RegulatoryAlert,
-} from "@shared/schema";
-
-import { IStorage } from "../Interface/IStorage";
+import { Alert as RegulatoryAlertModel} from "../Models";
+import { type RegulatoryAlert } from "@shared/schema";
 import { IAlerts } from "Interface/IAlerts";
 
 // Petite aide pour convertir proprement vers number (évite NaN)
@@ -36,4 +27,4 @@ export class SequelizeStorage implements IAlerts {
 
 }
 
-export const alert = new SequelizeStorage();
+export const alertService = new SequelizeStorage();

@@ -1,14 +1,17 @@
 {
-  "include": ["Services"
-    ,
+  "include": [
+    "Services",
     "Models",
     "dbContext",
     "Interface",
     "client/src/**/*",
     "shared/**/*",
     "server/**/*",
-    "Controller"
-, "Auth/replitAuth.ts"  ],
+    "Controller",
+    "Auth/replitAuth.ts",
+    "Auth/AuthController.ts",
+    "Routes/routes.ts"
+  ],
   "exclude": [
     "node_modules",
     "build",
