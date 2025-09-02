@@ -11,11 +11,11 @@ import { register, login, refreshToken, logout, listuser } from "../Auth/AuthCon
 export async function routes(app: Express): Promise<Server> {
 
   //Authentication routes
-  app.post("/register", register);
-  app.post("/login", login);
-  app.get("/list", listuser);
-  app.post("/refresh-token", refreshToken);
-  app.post("/logout", logout);
+  app.post("/api/register", register);
+  app.post("/api/login", login);
+  app.get("/api/list", listuser);
+  app.post("/api/refresh-token", refreshToken);
+  app.post("/api/logout", logout);
 
   //Chipments routes
   app.post('/api/shipments', createchipments);

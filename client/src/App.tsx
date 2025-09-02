@@ -5,7 +5,6 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
 import { LanguageProvider } from "@/contexts/LanguageContext";
-import Home from "@/pages/Home";
 import Register from "@/pages/Register";
 import CreateShipment from "@/pages/CreateShipment";
 import Dashboard from "@/pages/Dashboard";
@@ -28,22 +27,23 @@ function Router() {
   }
 
   return (
-<Switch>
-  {!isAuthenticated ? (
-    <>
-      <Route path="/" component={Auth} />
-      <Route path="/register" component={Register} />
-    </>
-  ) : (
-    <>
-      <Route path="/" component={Home} />
-      <Route path="/create" component={CreateShipment} />
-      <Route path="/dashboard" component={Dashboard} />
-      <Route path="/support" component={Support} />
-    </>
-  )}
-  <Route component={NotFound} />
-</Switch>
+      <Switch key={isAuthenticated ? "auth" : "anon"}>
+            {!isAuthenticated ? (
+              <>
+                <Route path="/" component={Auth} />
+                <Route path="/login" component={Auth} />   {/* alias utile */}
+                <Route path="/register" component={Register} />
+              </>
+            ) : (
+              <>
+                <Route path="/create" component={CreateShipment} />
+                <Route path="/dashboard" component={Dashboard} />
+                <Route path="/support" component={Support} />
+                {/* Page 404 */}
+              </>
+            )}
+        <Route component={NotFound} />
+      </Switch>
   );
 }
 

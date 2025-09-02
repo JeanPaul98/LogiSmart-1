@@ -1,5 +1,4 @@
 import { useEffect } from "react";
-import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useToast } from "@/hooks/use-toast";
@@ -40,16 +39,20 @@ export default function Dashboard() {
 
   const { t } = useLanguage();
   const { toast } = useToast();
-  const [, setLocation] = useLocation();
-
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      toast({ title: "Non autorisé", description: "Session expirée. Redirection…", variant: "destructive" });
-      const id = setTimeout(() => setLocation("/login", { replace: true }), 400);
+      toast({
+        title: "Unauthorized",
+        description: "You are logged out. Logging in again...",
+        variant: "destructive",
+      });
+      const id = setTimeout(() => {
+        window.location.href = "/api/login";
+      }, 500);
       return () => clearTimeout(id);
     }
-  }, [isAuthenticated, isLoading, toast, setLocation]);
+  }, [isAuthenticated, isLoading, toast]);
 
   if (isLoading || !isAuthenticated) {
     return (
@@ -63,8 +66,7 @@ export default function Dashboard() {
   }
 
   const handleLogout = () => {
-   window.location.href = "/api/logout";
-   //auth.clear(); setLocation("/login", { replace: true });
+    window.location.href = "/api/logout";
   };
 
   const fullName =
