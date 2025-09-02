@@ -21,7 +21,7 @@ function Router() {
   return (
     <Switch key={isAuthenticated ? "auth" : "anon"}>
        <>
-        <Route path="/" component={CreateShipment} />
+        <Route path="/" component={Dashboard} />
         <Route path="/envoie" component={CreateShipment} />
         <Route path="/dashboard" component={Dashboard} />
         <Route path="/calcul" component={Calcul} />
