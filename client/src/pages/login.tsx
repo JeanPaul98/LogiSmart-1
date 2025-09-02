@@ -1,49 +1,79 @@
-import { useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Link, useLocation } from "wouter";
-import { navigate } from "wouter/use-browser-location";
+
+type LoginForm = {
+  email: string;
+  password: string;
+};
 
 export default function Login() {
   const [, setLocation] = useLocation();
-  const [form, setForm] = useState({ email: "", password: "" });
+  const [form, setForm] = useState<LoginForm>({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [success, setSuccess] = useState<boolean | null>(null);
 
+  const canSubmit = useMemo(
+    () => form.email.trim() !== "" && form.password.trim() !== "" && !loading,
+    [form.email, form.password, loading]
+  );
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
+    const { name, value } = e.target;
+    setForm((f) => ({ ...f, [name]: value }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setMessage(null);
+  const handleSubmit = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!canSubmit) return;
+      setLoading(true);
+      setMessage(null);
 
-    try {
-      const res = await fetch("http://localhost:5000/api/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify(form),
-      });
+      try {
+        const res = await fetch("http://localhost:5000/api/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include", // cookies (refresh, etc.)
+          body: JSON.stringify(form),
+        });
 
-      const data = await res.json();
+        const data = await res.json().catch(() => ({}));
 
-      if (res.ok) {
-        setSuccess(true);
-        setMessage("Connexion réussie ✅");
-        localStorage.setItem("accessToken", data.accessToken);
-        setTimeout(() => setLocation("dashboard"), 300);
-      } else {
+        if (res.ok) {
+          // Stocke l'access token si ton backend en renvoie un
+          if (data?.accessToken) {
+            localStorage.setItem("accessToken", data.accessToken);
+          }
+          setSuccess(true);
+          setMessage("Connexion réussie ✅");
+
+          // Redirection SPA immédiate vers /dashboard
+          // (IMPORTANT: chemin absolu, commence par '/')
+          setLocation("/dashboard", { replace: true });
+          return;
+        }
+
+        if (!canSubmit) return; // et bouton disabled={!canSubmit}
+
+        
+        // Erreurs fonctionnelles
         setSuccess(false);
-        setMessage(data.message || "Erreur de connexion");
+        setMessage(
+          data?.message ??
+            (res.status === 401
+              ? "Identifiants incorrects"
+              : "Erreur de connexion")
+        );
+      } catch (err) {
+        setSuccess(false);
+        setMessage("Impossible de se connecter au serveur");
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      setSuccess(false);
-      setMessage("Impossible de se connecter au serveur");
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+    [canSubmit, form, setLocation]
+  );
 
   return (
     <div className="bg-gray-100 flex items-center justify-center min-h-screen">
@@ -65,24 +95,22 @@ export default function Login() {
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth="2"
-                  ></path>
+                  />
                 </svg>
               </div>
-              <span className="text-xl font-semibold text-gray-800">Votre Application</span>
+              <span className="text-xl font-semibold text-gray-800">
+                Votre Application
+              </span>
             </div>
             <h1 className="text-4xl font-bold text-gray-900 mb-4">Bienvenue</h1>
             <p className="text-gray-600 mb-8">
-              Une expérience fluide et moderne pour vous connecter et démarrer rapidement.
-              Conçue pour la clarté, la simplicité et l&apos;élégance.
+              Une expérience fluide et moderne pour vous connecter et démarrer
+              rapidement. Conçue pour la clarté, la simplicité et
+              l&apos;élégance.
             </p>
           </div>
 
           <div>
-           {/*<img
-              alt="Abstract colorful background"
-              className="rounded-2xl w-full"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuA-ZcvstQ1KNILwiQRXCkUXuxw1WlkbM0jXP-WxwD9LYLID43ptk5mW-hTUaOMgur2_DqsAQD9T0aurgxSWbRF8LEOAebKKAYW3jPmT71Ay0sQl14-3JAIbsMRsVKlPdv60CB0_N8cUxG-Zk-yhExVfSUL0JC567xeEJEDNEmUK8xuyLjjOYQh60VPnj3VkvL2oRuCyTM1JwZQDpkZw8MVXC31e3gAij4O2AtxVik1PyVAJ9tp7JjDB__UWtr2HJgJA-aznP9L_E8UJ"
-            />*/}
             <p className="text-center text-sm text-gray-500 mt-4">
               Sécurité renforcée. Vos données restent privées.
             </p>
@@ -95,7 +123,7 @@ export default function Login() {
           <div className="bg-gray-100 p-1 rounded-lg flex mb-8">
             <button
               className="w-1/2 bg-white text-gray-800 py-2.5 rounded-md font-semibold shadow-sm"
-              // Optionnel : si tu veux recharger la même page, tu peux ajouter un onClick
+              type="button"
             >
               Connexion
             </button>
@@ -110,7 +138,10 @@ export default function Login() {
           {/* Formulaire */}
           <form onSubmit={handleSubmit} className="flex flex-col space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="email">
+              <label
+                className="block text-sm font-medium text-gray-700 mb-2"
+                htmlFor="email"
+              >
                 Email ou nom d&apos;utilisateur
               </label>
               <input
@@ -123,11 +154,15 @@ export default function Login() {
                 className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
                 required
                 autoComplete="username"
+                disabled={loading}
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="password">
+              <label
+                className="block text-sm font-medium text-gray-700 mb-2"
+                htmlFor="password"
+              >
                 Mot de passe
               </label>
               <input
@@ -140,24 +175,30 @@ export default function Login() {
                 className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
                 required
                 autoComplete="current-password"
+                disabled={loading}
               />
             </div>
 
             <div className="flex justify-between items-center text-sm">
               <div className="flex items-center">
                 <p className="text-gray-600">Restez connecté</p>
-                {/* Si tu veux vraiment une case à cocher: 
-                <input type="checkbox" className="ml-2" /> */}
               </div>
-              <a className="font-semibold text-indigo-600 hover:text-indigo-500" href="#">
+              <a
+                className="font-semibold text-indigo-600 hover:text-indigo-500"
+                href="#"
+              >
                 Mot de passe oublié ?
               </a>
             </div>
 
             <button
               type="submit"
-              disabled={loading}
-              className="w-full bg-indigo-500 text-white py-3 rounded-lg font-semibold hover:bg-indigo-600 transition-colors"
+              disabled={!canSubmit}
+              className={`w-full text-white py-3 rounded-lg font-semibold transition-colors ${
+                canSubmit
+                  ? "bg-indigo-600 hover:bg-indigo-700"
+                  : "bg-indigo-300 cursor-not-allowed"
+              }`}
             >
               {loading ? "Connexion..." : "Se connecter"}
             </button>
@@ -188,29 +229,28 @@ export default function Login() {
               onClick={() => alert("Connexion Google (à implémenter)")}
               className="flex items-center justify-center gap-2 w-full bg-gray-100 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-200 transition-colors"
             >
+              {/* icône Google */}
               <svg
                 className="w-5 h-5"
-                height="48px"
                 viewBox="0 0 48 48"
-                width="48px"
                 xmlns="http://www.w3.org/2000/svg"
               >
                 <path
                   d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12	s5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24s8.955,20,20,20	s20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"
                   fill="#fbc02d"
-                ></path>
+                />
                 <path
                   d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039	l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"
                   fill="#e53935"
-                ></path>
+                />
                 <path
                   d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36	c-5.222,0-9.657-3.356-11.303-7.962l-6.571,4.819C9.656,39.663,16.318,44,24,44z"
                   fill="#4caf50"
-                ></path>
+                />
                 <path
                   d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.089,5.571l6.19,5.238	C42.018,35.474,44,30.023,44,24C44,22.659,43.862,21.35,43.611,20.083z"
                   fill="#1565c0"
-                ></path>
+                />
               </svg>
               Google
             </button>
@@ -220,13 +260,13 @@ export default function Login() {
               onClick={() => alert("Connexion Facebook (à implémenter)")}
               className="flex items-center justify-center gap-2 w-full bg-gray-100 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-200 transition-colors"
             >
+              {/* icône Facebook */}
               <svg
                 className="w-5 h-5 text-blue-800"
                 fill="currentColor"
                 viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
               >
-                <path d="M22,12c0-5.52-4.48-10-10-10S2,6.48,2,12c0,4.84,3.44,8.87,8,9.8V15H8v-3h2V9.5C10,7.57,11.57,6,13.5,6H16v3h-1.5c-1.1,0-1.5,0.45-1.5,1.4v2.1h3l-0.5,3H13v6.8C18.56,20.87,22,16.84,22,12z"></path>
+                <path d="M22,12c0-5.52-4.48-10-10-10S2,6.48,2,12c0,4.84,3.44,8.87,8,9.8V15H8v-3h2V9.5C10,7.57,11.57,6,13.5,6H16v3h-1.5c-1.1,0-1.5,0.45-1.5,1.4v2.1h3l-0.5,3H13v6.8C18.56,20.87,22,16.84,22,12z" />
               </svg>
               Facebook
             </button>
@@ -234,7 +274,10 @@ export default function Login() {
 
           <p className="text-center text-sm text-gray-600 mt-8">
             Nouveau ici ?{" "}
-            <Link href="/register" className="font-semibold text-indigo-600 hover:text-indigo-500">
+            <Link
+              href="/register"
+              className="font-semibold text-indigo-600 hover:text-indigo-500"
+            >
               Créez un compte
             </Link>
           </p>

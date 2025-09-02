@@ -1,210 +1,290 @@
-import { useEffect } from "react";
-import { useLocation } from "wouter";
-import { useAuth } from "@/hooks/useAuth";
-import { useLanguage } from "@/contexts/LanguageContext";
-import { useToast } from "@/hooks/use-toast";
-import Layout from "@/components/Layout";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  User,
-  Package,
-  History,
-  Download,
-  Bell,
-  TrendingUp,
-  LogOut,
-  Settings,
-  FileText,
-  BarChart3,
-} from "lucide-react";
+// src/pages/CalculTarif.tsx
+import MainLayout from "@/components/layout/MainLayout";
+import React, { useState } from "react";
+import { Link } from "wouter";
 
-// Typage local sûr si useAuth() n'expose pas un type fort
-type MaybeUser =
-  | {
-      profileImageUrl?: string | null;
-      firstName?: string | null;
-      lastName?: string | null;
-      email?: string | null;
-    }
-  | null
-  | undefined;
+export default function CalculTarif() {
+  // états de formulaire (mock)
+  const [form, setForm] = useState({
+    origin: "",
+    destination: "",
+    goodsType: "",
+    incoterm: "",
+    weight: "",
+    volume: "",
+    dims: "",
+    mode: "",
+  });
 
-export default function Dashboard() {
-  // on caste localement la forme retournée pour éviter les 2339
-  const { user, isAuthenticated, isLoading } = useAuth() as {
-    user: MaybeUser;
-    isAuthenticated: boolean;
-    isLoading: boolean;
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
+
+  const handleCalculate = (e: React.FormEvent) => {
+    e.preventDefault();
+    // TODO: brancher ton API de calcul
+    alert("Calcul lancé (démo)");
   };
-
-  const { t } = useLanguage();
-  const { toast } = useToast();
-  const [, setLocation] = useLocation();
-
-
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      toast({ title: "Non autorisé", description: "Session expirée. Redirection…", variant: "destructive" });
-      const id = setTimeout(() => setLocation("/login", { replace: true }), 400);
-      return () => clearTimeout(id);
-    }
-  }, [isAuthenticated, isLoading, toast, setLocation]);
-
-  if (isLoading || !isAuthenticated) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-600 to-secondary-600">
-        <div className="text-white text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-4"></div>
-          <p>Chargement...</p>
-        </div>
-      </div>
-    );
-  }
-
-  const handleLogout = () => {
-   window.location.href = "/api/logout";
-   //auth.clear(); setLocation("/login", { replace: true });
-  };
-
-  const fullName =
-    (user?.firstName ?? "") + (user?.lastName ? ` ${user.lastName}` : "");
-  const displayName = fullName.trim() || t("dashboard.profile.defaultName");
-  const displayEmail = user?.email ?? "";
-
   return (
-    <Layout>
-      <div className="p-4 space-y-6">
-        {/* User Profile Section */}
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-4">
-              <div className="bg-primary-100 w-16 h-16 rounded-full flex items-center justify-center overflow-hidden">
-                {user?.profileImageUrl ? (
-                  <img
-                    src={user.profileImageUrl}
-                    alt="Profile"
-                    className="w-16 h-16 rounded-full object-cover"
-                  />
-                ) : (
-                  <User className="w-8 h-8 text-primary-600" />
-                )}
-              </div>
-              <div className="flex-1">
-                <h2 className="text-xl font-bold text-gray-900">{displayName}</h2>
-                <p className="text-gray-600">{displayEmail}</p>
-                <div className="flex items-center space-x-2 mt-2">
-                  <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
-                    {t("dashboard.profile.verified")}
-                  </span>
-                </div>
-              </div>
+      <MainLayout>
+
+            <div className="flex">
+              {/* Main */}
+              <main className="flex-1 pt-4 pb-16">
+                <h1 className="text-xl font-bold text-gray-900">Calcul de tarifs</h1>
+
+                {/* Paramètres d’expédition */}
+                <section className="mt-4 rounded-lg border bg-white">
+                  <div className="px-5 py-4 border-b">
+                    <p className="font-semibold text-gray-900">Paramètres d’expédition</p>
+                  </div>
+
+                  <form onSubmit={handleCalculate} className="p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm text-gray-700 mb-1">Origine</label>
+                      <input
+                        name="origin"
+                        value={form.origin}
+                        onChange={handleChange}
+                        placeholder="Pays / Ville / Port"
+                        className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm text-gray-700 mb-1">Destination</label>
+                      <input
+                        name="destination"
+                        value={form.destination}
+                        onChange={handleChange}
+                        placeholder="Pays / Ville / Port"
+                        className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm text-gray-700 mb-1">Type de marchandise</label>
+                      <input
+                        name="goodsType"
+                        value={form.goodsType}
+                        onChange={handleChange}
+                        placeholder="Sélectionner (Générales, Dangereuses, Réfrigérées…)"
+                        className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm text-gray-700 mb-1">Incoterm</label>
+                      <input
+                        name="incoterm"
+                        value={form.incoterm}
+                        onChange={handleChange}
+                        placeholder="EXW / FOB / CIF / DDP…"
+                        className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm text-gray-700 mb-1">Poids total (kg)</label>
+                      <input
+                        name="weight"
+                        value={form.weight}
+                        onChange={handleChange}
+                        placeholder="Ex: 250"
+                        className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm text-gray-700 mb-1">Volume (m³)</label>
+                      <input
+                        name="volume"
+                        value={form.volume}
+                        onChange={handleChange}
+                        placeholder="Ex: 1.2"
+                        className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm text-gray-700 mb-1">Dimensions (L × l × h)</label>
+                      <input
+                        name="dims"
+                        value={form.dims}
+                        onChange={handleChange}
+                        placeholder="Ex: 120 × 80 × 60 cm"
+                        className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm text-gray-700 mb-1">Mode de transport</label>
+                      <input
+                        name="mode"
+                        value={form.mode}
+                        onChange={handleChange}
+                        placeholder="Aérien / Maritime / Routier"
+                        className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                      />
+                    </div>
+
+                    <div className="md:col-span-2 flex items-center gap-3 pt-1">
+                      <button
+                        type="button"
+                        className="inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                      >
+                        <span className="material-symbols-outlined text-base">upload</span>
+                        Importer la liste (CSV)
+                      </button>
+
+                      <div className="ml-auto flex items-center gap-3">
+                        <button
+                          type="button"
+                          className="rounded-md border px-3 py-2 text-sm text-gray-400 bg-gray-100 cursor-not-allowed"
+                          disabled
+                        >
+                          Enregistrer le brouillon
+                        </button>
+                        <button
+                          type="submit"
+                          className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+                        >
+                          Calculer
+                        </button>
+                      </div>
+                    </div>
+                  </form>
+                </section>
+
+                {/* Résultat estimatif */}
+                <section className="mt-4 rounded-lg border bg-white">
+                  <div className="px-5 py-4 border-b">
+                    <p className="font-semibold text-gray-900">Résultat estimatif</p>
+                  </div>
+                  <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FieldRead label="Coût total" value="—" />
+                    <FieldRead label="Délai estimé" value="—" />
+                    <FieldRead label="Taxes & droits" value="—" />
+                    <FieldRead label="Frais de manutention" value="—" />
+                    <p className="md:col-span-2 text-xs text-gray-500 mt-1">
+                      Les montants finaux seront confirmés après validation des documents.
+                    </p>
+                  </div>
+                </section>
+
+                {/* Suivi de colis */}
+                <section className="mt-4 rounded-lg border bg-white">
+                  <div className="px-5 py-4 border-b">
+                    <p className="font-semibold text-gray-900">Suivi de colis</p>
+                  </div>
+                  <div className="p-5">
+                    <div className="flex gap-2">
+                      <input
+                        placeholder="Ex: LGS-ABC123456"
+                        className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                      />
+                      <button className="h-9 rounded-md bg-blue-600 px-4 text-white text-sm font-semibold hover:bg-blue-700">
+                        Suivre
+                      </button>
+                    </div>
+
+                    {/* Timeline */}
+                    <ol className="mt-6 space-y-6">
+                      {[
+                        { title: "Commande confirmée", date: "12 Jan 2025 · 10:22" },
+                        { title: "Pris en charge par l'entrepôt", date: "13 Jan 2025 · 09:10" },
+                        { title: "En transit", date: "15 Jan 2025 · 18:40" },
+                      ].map((s, i) => (
+                        <li key={i} className="relative pl-6">
+                          <span className="absolute left-0 top-1.5 h-2.5 w-2.5 rounded-full bg-blue-500" />
+                          <p className="text-sm font-medium text-gray-900">{s.title}</p>
+                          <p className="text-xs text-gray-500">{s.date}</p>
+                        </li>
+                      ))}
+                    </ol>
+                  </div>
+                </section>
+
+                {/* Recherche de codes SH */}
+                <section className="mt-4 rounded-lg border bg-white">
+                  <div className="px-5 py-4 border-b">
+                    <p className="font-semibold text-gray-900">Recherche de codes SH</p>
+                  </div>
+                  <div className="p-5">
+                    <div className="flex gap-3">
+                      <input
+                        placeholder="Ex: ordinateurs portables"
+                        className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                      />
+                      <button className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">
+                        Rechercher
+                      </button>
+                      <button className="rounded-md border px-3 py-2 text-sm text-gray-600 bg-gray-100">
+                        Filtres
+                      </button>
+                    </div>
+
+                    <div className="mt-4 divide-y rounded-md border overflow-hidden">
+                      {[
+                        {
+                          code: "8471.30",
+                          title: "Ordinateurs et portables",
+                          sub: "Appareils de traitement de données, non assemblés",
+                        },
+                        {
+                          code: "8517.12",
+                          title: "Téléphones mobiles",
+                          sub: "Appareils pour réseaux cellulaires",
+                        },
+                        {
+                          code: "6403.59",
+                          title: "Chaussures en cuir",
+                          sub: "Semelles en caoutchouc ou plastique",
+                        },
+                      ].map((r, i) => (
+                        <div
+                          key={i}
+                          className={`flex items-center justify-between px-4 py-3 ${
+                            i === 0 ? "bg-blue-50" : "bg-white"
+                          }`}
+                        >
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">{r.title}</p>
+                            <p className="text-xs text-gray-500">{r.sub}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-sm font-semibold text-blue-700 underline">
+                              {r.code}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </section>
+
+                {/* Footer */}
+                <footer className="text-xs text-gray-600 flex flex-wrap items-center gap-x-4 gap-y-2 mt-8">
+                  <span>Contact: support@logismart.africa</span>
+                  <span className="hidden sm:inline">|</span>
+                  <a className="hover:underline" href="#">Centre d'aide</a>
+                  <span className="hidden sm:inline">|</span>
+                  <a className="hover:underline" href="#">Conditions</a>
+                  <span className="hidden sm:inline">|</span>
+                  <a className="hover:underline" href="#">Confidentialité</a>
+                  <span className="ml-auto text-gray-400">© 2025 LogiSmart</span>
+                </footer>
+
+                
+              </main>
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Statistics Cards */}
-        <div className="grid grid-cols-2 gap-4">
-          <Card>
-            <CardContent className="p-4 text-center">
-              <div className="bg-primary-50 w-12 h-12 rounded-lg flex items-center justify-center mx-auto mb-2">
-                <Package className="w-6 h-6 text-primary-600" />
-              </div>
-              <p className="text-2xl font-bold text-primary-600">0</p>
-              <p className="text-sm text-gray-600">
-                {t("dashboard.stats.totalShipments")}
-              </p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4 text-center">
-              <div className="bg-green-50 w-12 h-12 rounded-lg flex items-center justify-center mx-auto mb-2">
-                <TrendingUp className="w-6 h-6 text-green-600" />
-              </div>
-              <p className="text-2xl font-bold text-green-600">€0</p>
-              <p className="text-sm text-gray-600">
-                {t("dashboard.stats.totalSaved")}
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Quick Actions */}
-        <Card>
-          <CardHeader>
-            <CardTitle>{t("dashboard.quickActions.title")}</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <Button variant="outline" className="w-full justify-start" onClick={() => {}}>
-              <History className="w-4 h-4 mr-3 text-primary-600" />
-              {t("dashboard.quickActions.shipmentHistory")}
-            </Button>
-
-            <Button variant="outline" className="w-full justify-start" onClick={() => {}}>
-              <FileText className="w-4 h-4 mr-3 text-secondary-600" />
-              {t("dashboard.quickActions.documents")}
-            </Button>
-
-            <Button variant="outline" className="w-full justify-start" onClick={() => {}}>
-              <Bell className="w-4 h-4 mr-3 text-amber-600" />
-              <div className="flex items-center justify-between w-full">
-                <span>{t("dashboard.quickActions.alerts")}</span>
-                <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
-                  0
-                </span>
-              </div>
-            </Button>
-
-            <Button variant="outline" className="w-full justify-start" onClick={() => {}}>
-              <BarChart3 className="w-4 h-4 mr-3 text-blue-600" />
-              {t("dashboard.quickActions.analytics")}
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Recent Activity */}
-        <Card>
-          <CardHeader>
-            <CardTitle>{t("dashboard.recentActivity.title")}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center py-8">
-              <Package className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500">{t("dashboard.recentActivity.empty")}</p>
-              <p className="text-sm text-gray-400 mt-2">
-                {t("dashboard.recentActivity.emptySubtitle")}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Account Settings */}
-        <Card>
-          <CardHeader>
-            <CardTitle>{t("dashboard.settings.title")}</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <Button variant="outline" className="w-full justify-start" onClick={() => {}}>
-              <Settings className="w-4 h-4 mr-3 text-gray-600" />
-              {t("dashboard.settings.preferences")}
-            </Button>
-
-            <Button variant="outline" className="w-full justify-start" onClick={() => {}}>
-              <Download className="w-4 h-4 mr-3 text-gray-600" />
-              {t("dashboard.settings.exportData")}
-            </Button>
-
-            <Button
-              variant="outline"
-              className="w-full justify-start text-red-600 border-red-200 hover:bg-red-50"
-              onClick={handleLogout}
-            >
-              <LogOut className="w-4 h-4 mr-3" />
-              {t("dashboard.settings.logout")}
-            </Button>
-          </CardContent>
-        </Card>
+      </MainLayout>
+  );
+}
+/** Petit composant lecture seule (étiquette + valeur) */
+function FieldRead({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <label className="block text-sm text-gray-700 mb-1">{label}</label>
+      <div className="h-9 w-full rounded-md border border-gray-200 bg-gray-50 px-3 text-sm flex items-center text-gray-900">
+        {value}
       </div>
-    </Layout>
+    </div>
   );
 }
