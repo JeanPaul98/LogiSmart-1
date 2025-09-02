@@ -201,48 +201,6 @@ export default function Register() {
             </div>
           )}
 
-          {/* Séparateur */}
-          <div className="flex items-center my-6">
-            <hr className="w-full border-gray-300" />
-            <span className="px-2 text-gray-500 text-sm">ou continuez avec</span>
-            <hr className="w-full border-gray-300" />
-          </div>
-
-          {/* Boutons sociaux (placeholders) */}
-          <div className="grid grid-cols-2 gap-4">
-            <button
-              type="button"
-              onClick={() => alert("Inscription Google — à implémenter")}
-              className="flex items-center justify-center gap-2 w-full bg-gray-100 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-200 transition-colors"
-            >
-              <img
-                alt="Google logo"
-                className="h-5 w-5"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuBHb161zksTtmHrshUd2DyhcfmsE7iOVSbvdEFZcQxq4WDAkLmj1CFno08Q2X__klJzNcqirTLX7idKFJMyeCS8bMmKHjKZXcrGd6YcWxQSmuJm5pHvi60uFv5EBbeskSdlcDmMxaZXevSnrwY3ka_7x1f_QbN7NGY7qmVrngWZpLm6wxaxMjxGlzPONa3khScZhH1HdbdxdaxN-em2MFkDdaXsbWaEWuoXTMTSETBjmQZ0Es1-JcbFytY1UueO4OddkwzaQXf6NKi7"
-              />
-              Google
-            </button>
-
-            <button
-              type="button"
-              onClick={() => alert("Inscription Facebook — à implémenter")}
-              className="flex items-center justify-center gap-2 w-full bg-gray-100 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-200 transition-colors"
-            >
-              <img
-                alt="Facebook logo"
-                className="h-5 w-5"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuD_U4YiJSVD9ky0M0qYR3YEmrNV_UXTiMleZPbWK48Z0ZOMUGOxnXsLoT7zhDbtxXxGQYuncd3x-S5ibXZF7xhZTTl-WjoAGQPjjvilw9GJ5aZsPrH5zE2xP9nI4znrkwcaZOMJrV2SNar984LC-NQwLrcnT_YGXg-BiPIVaXrJeuh-PKY-SKc3rVganKb6fShNWISwsqIJGAuVHEGVQ3gjYn_OCpFe4rzKNfwePFNKm0Hy9x4KbCrbLsRwebKTDyRJ25JAA5lmFPBF"
-              />
-              Facebook
-            </button>
-          </div>
-
-          <p className="text-center text-sm text-gray-600 mt-8">
-            Déjà un compte ?{" "}
-            <Link href="/login" className="text-indigo-600 font-medium hover:text-indigo-500">
-              Se connecter
-            </Link>
-          </p>
         </div>
       </div>
     </div>

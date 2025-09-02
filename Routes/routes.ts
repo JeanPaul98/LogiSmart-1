@@ -6,7 +6,7 @@ import { createchipments, getchipments, chimentid } from "../Controller/Chipment
 import { chat } from "../Controller/ChatController"
 import { create, search } from "../Controller/HsCodesController"
 import { gettracking, createtracking } from "../Controller/TrackingController"
-import { register, login, refreshToken, logout, listuser } from "../Auth/AuthController";
+import { register, login, refreshToken, logout, listuser } from "../Auth/AuthController/AuthController";
 
 export async function routes(app: Express): Promise<Server> {
 

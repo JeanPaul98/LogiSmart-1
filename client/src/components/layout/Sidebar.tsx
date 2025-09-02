@@ -17,10 +17,11 @@ const Sidebar: React.FC = () => {
         <ul>
           {[
             { label: 'Tableau de bord', href: '/dashboard' },
-            { label: 'Calculateur', href: '/calcul' },
+            { label: 'Nouveau envoi', href: '/envoie' },
             { label: 'Suivi de colis', href: '/suivi' },
-            { label: 'Recherche SH', href: '/recherche' },
-            { label: 'Profil & Historique', href: '/profil' },
+            { label: 'Recherche SH', href: '/search' },
+            { label: 'Calculateur', href: '/calcul' },
+           /* { label: 'Profil & Historique', href: '/profil' },*/
           ].map(({ label, href }) => (
             <li key={href}>
               <Link
@@ -41,8 +42,8 @@ const Sidebar: React.FC = () => {
         <p className="text-xs text-gray-500 uppercase px-4 mt-6 mb-2">Raccourcis</p>
         <ul>
           {[
-            {  label: 'Nouveau devis', href: '/devis' },
-            {  label: 'Activité récente', href: '/historique' },
+           /* {  label: 'Nouveau devis', href: '/devis' },*/
+           /* {  label: 'Activité récente', href: '/historique' },*/
           ].map(({ label, href }) => (
             <li key={href}>
               <Link

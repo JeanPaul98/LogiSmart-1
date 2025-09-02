@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { User } from "../Models/User";
+import { User } from "../../Models/User";
 
 const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET || "access_secret";
 const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET || "refresh_secret";
@@ -16,8 +16,8 @@ const generateRefreshToken = (user: any) =>
 
 export const listuser = async (req: Request, res: Response) => {
   try {
-    const existingUser  = await User.findAll();
-    if (existingUser ) return res.status(200).json({ existingUser });
+    const existingUser = await User.findAll();
+    if (existingUser) return res.status(200).json({ existingUser });
 
     res.status(201).json({ message: "Liste utilisateur" });
   } catch (error: unknown) {
@@ -33,13 +33,14 @@ export const listuser = async (req: Request, res: Response) => {
 export const register = async (req: Request, res: Response) => {
   const { email, password, firstName, lastName } = req.body;
   try {
-    const existingUser  = await User.findOne({ where: { email } });
-    if (existingUser ) return res.status(400).json({ message: "Email déjà utilisé" });
+    const existingUser = await User.findOne({ where: { email } });
+    if (existingUser) return res.status(400).json({ message: "Email déjà utilisé" });
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = await User.create({ email, password: hashedPassword, firstName, lastName, preferredLanguage: "fr" });
 
-    res.status(201).json({success: true, message: "Utilisateur créé",
+    res.status(201).json({
+      success: true, message: "Utilisateur créé",
       data: {
         id: user.id,
         email: user.email,
@@ -47,7 +48,7 @@ export const register = async (req: Request, res: Response) => {
         lastName: user.lastName,
         preferredLanguage: user.preferredLanguage,
         createdAt: user.createdAt,
-       }
+      }
     });
   } catch (error: unknown) {
     if (error instanceof Error) {
@@ -55,7 +56,7 @@ export const register = async (req: Request, res: Response) => {
     } else {
       console.error(error);
     }
-    res.status(500).json({succes: false, message: "Erreur serveur" });
+    res.status(500).json({ succes: false, message: "Erreur serveur" });
   }
 };
 

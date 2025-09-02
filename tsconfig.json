@@ -9,7 +9,7 @@
     "server/**/*",
     "Controller",
     "Auth/replitAuth.ts",
-    "Auth/AuthController.ts",
+    "Auth/AuthController/AuthController.ts",
     "Routes/routes.ts"
   ],
   "exclude": [

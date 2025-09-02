@@ -7,9 +7,12 @@ import { useAuth } from "@/hooks/useAuth";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import Register from "@/pages/Register";
 import CreateShipment from "@/pages/CreateShipment";
-import Dashboard from "@/pages/Dashboard";
 import Support from "@/pages/Support";
 import NotFound from "@/pages/not-found";
+import Dashboard from "@/pages/Dashboard";
+import Calcul from "@/pages/CalculTarif";
+import Suivi from "@/pages/SuiviColis";
+import Search from "@/pages/HSSearch";
 import Auth from "@/pages/login";
 
 function Router() {
@@ -28,20 +31,18 @@ function Router() {
 
   return (
       <Switch key={isAuthenticated ? "auth" : "anon"}>
-            {!isAuthenticated ? (
+
               <>
-                <Route path="/" component={Auth} />
-                <Route path="/login" component={Auth} />   {/* alias utile */}
-                <Route path="/register" component={Register} />
-              </>
-            ) : (
-              <>
-                <Route path="/create" component={CreateShipment} />
+                <Route path="/" component={CreateShipment} />
+                <Route path="/envoie" component={CreateShipment} />
                 <Route path="/dashboard" component={Dashboard} />
+                <Route path="/calcul" component={Calcul} />
+                <Route path="/suivi" component={Suivi} />
+                <Route path="/search" component={Search} />
                 <Route path="/support" component={Support} />
                 {/* Page 404 */}
               </>
-            )}
+
         <Route component={NotFound} />
       </Switch>
   );
