@@ -1,5 +1,5 @@
 import type { Response, Request } from "express";
-import { hscode } from "../Services/HSCodeService";
+import { hscodeService } from "../Services/HSCodeService";
 
   // HS Code search
   export const search =  async (req:Request , res:Response) => {
@@ -9,7 +9,7 @@ import { hscode } from "../Services/HSCodeService";
         return res.status(400).json({ message: "Query parameter required" });
       }
 
-      const hsCodes = await hscode.searchHSCodes(query);
+      const hsCodes = await hscodeService.searchHSCodes(query);
       res.json(hsCodes);
     } catch (error) {
       console.error("Error searching HS codes:", error);
@@ -19,7 +19,7 @@ import { hscode } from "../Services/HSCodeService";
 
   export const create = async (req:Request, res:Response) => {
     try {
-      const hsCode = await hscode.getHSCode(req.params.code);
+      const hsCode = await hscodeService.getHSCode(req.params.code);
       if (!hsCode) {
         return res.status(404).json({ message: "HS code not found" });
       }

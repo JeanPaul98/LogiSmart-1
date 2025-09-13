@@ -1,7 +1,7 @@
 // src/server/storage/IStorage.ts
 import {
     type User,
-    type UpsertUser,
+    type InsertUser,
   } from "@shared/schema";
   
   /**
@@ -10,13 +10,12 @@ import {
    */
   export interface IUser{
     // Users
+    createUser(userData: InsertUser): Promise<User>;
     getUser(id: string): Promise<User | undefined>;
-    upsertUser(user: UpsertUser): Promise<User>;
 
   }
   
   export type {
     User,
-    UpsertUser,
   };
   

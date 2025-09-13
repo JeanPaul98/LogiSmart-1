@@ -27,18 +27,22 @@ export type Session = z.infer<typeof sessionSchema>;
 /* ===========================
   Users (id reste UUID)
   =========================== */
-export const userSchema = z.object({
-  id: z.string().uuid().optional(),
-  email: z.string().email().optional().nullable(),
-  password: z.string(),
-  firstName: z.string().optional().nullable(),
-  lastName: z.string().optional().nullable(),
-  profileImageUrl: z.string().url().optional().nullable(),
-  phone: z.string().optional().nullable(),
-  preferredLanguage: z.string().default("fr"),
-  createdAt: z.coerce.date().optional(),
-  updatedAt: z.coerce.date().optional(),
-});
+  export const userSchema = z.object({
+    id: z.string().uuid().optional(),
+    email: z.string().email().optional().nullable(),
+    password: z.string(),
+    firstName: z.string().optional().nullable(),
+    lastName: z.string().optional().nullable(),
+    profileImageUrl: z.string().url().optional().nullable(),
+    phone: z.string().optional().nullable(),
+    preferredLanguage: z.string().default("fr"),
+  
+    // ⬇️ nouvel attribut
+    role: z.enum(["user", "admin", "moderator"]).default("user"),
+  
+    createdAt: z.coerce.date().optional(),
+    updatedAt: z.coerce.date().optional(),
+  });
 
 export const insertUserSchema = userSchema.omit({
   id: true,
@@ -46,7 +50,7 @@ export const insertUserSchema = userSchema.omit({
   updatedAt: true,
 });
 export type User = z.infer<typeof userSchema>;
-export type UpsertUser = z.infer<typeof insertUserSchema> & { id?: string };
+export type InsertUser = z.infer<typeof insertUserSchema> & { id?: string };
 
 /* ===========================
   Shipments (id en int auto)

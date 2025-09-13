@@ -1,44 +1,39 @@
-// src/server/storage.sequelize.ts
-import { Op } from "sequelize";
-import {
-    User as UserModel,
-} from "../Models";
+// src/server/storage.typeorm.user.ts
+import { AppDataSource } from "../dbContext/db";
+import { User as UserEntity } from "../Models/User";
+import type { User, InsertUser } from "@shared/schema"; // DTO Zod
+import { IUser } from "../Interface/IUser";
 
-import {
-    type User,
-    type UpsertUser,
-} from "@shared/schema";
-
-import { IStorage } from "../Interface/IStorage";
-import { IUser } from "Interface/IUser";
-
-// Petite aide pour convertir proprement vers number (évite NaN)
-const toNum = (v: number | string) => {
-    const n = typeof v === "number" ? v : Number(v);
-    if (Number.isNaN(n)) throw new Error(`Invalid numeric id: ${v}`);
-    return n;
-};
-
+/**
+ * Service TypeORM pour la gestion des utilisateurs.
+ * Ici on ajoute une méthode createUser pour l’inscription.
+ */
 export class UserService implements IUser {
+  private repo = AppDataSource.getRepository(UserEntity);
 
-    // USERS
-    async getUser(id: string): Promise<User | undefined> {
-        const u = await UserModel.findByPk(id);
-        return u?.toJSON() as User | undefined;
-    }
+  /**
+   * Création d’un nouvel utilisateur.
+   *
+   * Logique métier :
+   * - Reçoit un DTO validé (InsertUser) depuis la couche API.
+   * - Crée une nouvelle instance UserEntity.
+   * - Hash du mot de passe recommandé avant sauvegarde (non inclus ici).
+   * - Retourne l’utilisateur persistant avec son id généré.
+   */
+  async createUser(userData: InsertUser): Promise<User> {
+    const entity = this.repo.create({
+      ...userData,
+      role: userData.role ?? "user", // par défaut "user"
+    });
+    const saved = await this.repo.save(entity);
+    return saved as unknown as User;
+  }
 
-    async upsertUser(userData: UpsertUser): Promise<User> {
-        // MySQL n’utilise pas réellement `returning`. Sequelize fera un select ensuite si besoin.
-        const [u] = await UserModel.upsert({ ...userData });
-        // Selon le dialecte, upsert peut retourner l’instance ou pas. On sécurise :
-        if (!u) {
-            // fallback: relire
-            const reread = await UserModel.findByPk(userData.id);
-            if (!reread) throw new Error("Failed to upsert user");
-            return reread.toJSON() as User;
-        }
-        return u.toJSON() as User;
-    }
+  // Exemple méthode existante
+  async getUser(id: string): Promise<User | undefined> {
+    const row = await this.repo.findOne({ where: { id } });
+    return (row ?? undefined) as unknown as User | undefined;
+  }
 }
 
-export const user = new UserService();
+export const userService = new UserService();

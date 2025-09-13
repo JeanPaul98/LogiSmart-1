@@ -17,9 +17,9 @@ export class User {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
 
-  @Index({ unique: true })
-  @Column({ type: "varchar", length: 255 })
-  email!: string;
+  // ⬇⬇ le champ devient nullable, et le type TS suit: string | null
+  @Column({ type: "varchar", length: 255, unique: true, nullable: true })
+  email!: string | null;
 
   @Column({ type: "varchar", length: 255, nullable: true })
   firstName!: string | null;
@@ -41,6 +41,15 @@ export class User {
 
   @OneToMany(() => ChatSession, (session) => session.user)
   sessions!: ChatSession[];
+
+  // ⬇⬇ AJOUT du rôle (enum)
+  @Column({
+    type: "enum",
+    enum: ["user", "admin", "moderator"],
+    default: "user",
+  })
+  role!: "user" | "admin" | "moderator";
+
 
   @CreateDateColumn({ type: "datetime" })
   createdAt!: Date;
