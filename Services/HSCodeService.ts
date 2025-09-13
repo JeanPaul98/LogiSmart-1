@@ -1,6 +1,6 @@
 // src/server/services/hscode.service.ts
 import { AppDataSource } from "../dbContext/db";
-import { HSCode as HSCodeEntity } from "../Models/HSCode";
+import { HSCode as HSCodeEntity } from "../entities/HSCode";
 import type { HSCode as HSCodeDTO, InsertHSCode } from "@shared/schema";
 import { insertHSCodeSchema } from "@shared/schema";
 import { Like } from "typeorm";
@@ -45,8 +45,8 @@ export class HSCodeService {
 
 
 
-   /** Recherche par code OU description (LIKE %query%), limité à 25, trié par code ASC */
-   async searchHSCodes(query: string): Promise<HSCodeDTO[]> {
+  /** Recherche par code OU description (LIKE %query%), limité à 25, trié par code ASC */
+  async searchHSCodes(query: string): Promise<HSCodeDTO[]> {
     const like = `%${query}%`;
     const rows = await this.repo.find({
       where: [

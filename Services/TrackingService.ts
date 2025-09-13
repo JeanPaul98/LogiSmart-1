@@ -1,7 +1,7 @@
 // src/server/storage.typeorm.tracking.ts
 import { AppDataSource } from "../dbContext/db";
-import { Shipment as ShipmentEntity } from "../Models/Shipment";
-import { TrackingEvent as TrackingEventEntity } from "../Models/TrackingEvent";
+import { Shipment as ShipmentEntity } from "../entities/Shipment";
+import { TrackingEvent as TrackingEventEntity } from "../entities/TrackingEvent";
 
 import type {
   InsertTrackingEvent,

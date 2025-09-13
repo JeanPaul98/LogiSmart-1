@@ -1,6 +1,6 @@
 // src/server/storage.typeorm.document.ts
 import { AppDataSource } from "../dbContext/db";
-import { Document as DocumentEntity } from "../Models/Document";
+import { Document as DocumentEntity } from "../entities/Document";
 import type { InsertDocument, Document as DocumentDTO } from "@shared/schema";
 import { IDocument } from "../Interface/IDocument";
 

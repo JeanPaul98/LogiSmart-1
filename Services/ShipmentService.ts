@@ -1,6 +1,6 @@
 // src/server/Services/ShipmentService.ts
 import { AppDataSource } from "../dbContext/db";                    // ⬅️ assure le bon chemin
-import { Shipment as ShipmentEntity } from "../Models/Shipment"; // ⬅️ entité TypeORM
+import { Shipment as ShipmentEntity } from "../entities/Shipment"; // ⬅️ entité TypeORM
 import type { InsertShipment, Shipment } from "@shared/schema";
 import { IShipment } from "../Interface/IShipment";
 
