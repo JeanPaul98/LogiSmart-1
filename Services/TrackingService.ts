@@ -1,34 +1,17 @@
-// src/server/storage.sequelize.ts
-import { Op } from "sequelize";
-import {
-  User as UserModel,
-  Shipment as ShipmentModel,
-  TrackingEvent as TrackingEventModel,
-  Document as DocumentModel,
-  HSCode as HSCodeModel,
-  Alert as RegulatoryAlertModel,
-  ChatMessage as ChatMessageModel,
-} from "../Models";
+// src/server/storage.typeorm.tracking.ts
+import { AppDataSource } from "../dbContext/db";
+import { Shipment as ShipmentEntity } from "../Models/Shipment";
+import { TrackingEvent as TrackingEventEntity } from "../Models/TrackingEvent";
 
-import {
-  type User,
-  type UpsertUser,
-  type InsertShipment,
-  type Shipment,
-  type InsertTrackingEvent,
-  type TrackingEvent,
-  type InsertDocument,
-  type Document,
-  type HSCode,
-  type InsertChatMessage,
-  type ChatMessage,
-  type RegulatoryAlert,
+import type {
+  InsertTrackingEvent,
+  TrackingEvent as TrackingEventDTO,
+  Shipment as ShipmentDTO,
 } from "@shared/schema";
 
-import { IStorage } from "../Interface/IStorage";
-import { ITracking } from "Interface/ITracking";
+import { ITracking } from "../Interface/ITracking";
 
-// Petite aide pour convertir proprement vers number (évite NaN)
+// helper: conversion sûre vers number
 const toNum = (v: number | string) => {
   const n = typeof v === "number" ? v : Number(v);
   if (Number.isNaN(n)) throw new Error(`Invalid numeric id: ${v}`);
@@ -36,43 +19,62 @@ const toNum = (v: number | string) => {
 };
 
 export class TrackingService implements ITracking {
+  /** Retourne un shipment par trackingNumber */
+  async getShipmentByTracking(trackingNumber: string): Promise<ShipmentDTO | undefined> {
+    const repo = AppDataSource.getRepository(ShipmentEntity);
+    const row = await repo.findOne({ where: { trackingNumber } });
+    return (row ?? undefined) as unknown as ShipmentDTO | undefined;
+  }
 
-    // TRACKING
+  /** Ajoute un TrackingEvent et met à jour le statut du Shipment (transactionnel) */
+  async addTrackingEvent(event: InsertTrackingEvent): Promise<TrackingEventDTO> {
+    const shipmentId = toNum(event.shipmentId as number | string);
 
-    async getShipmentByTracking(trackingNumber: string): Promise<Shipment | undefined> {
-      const s = await ShipmentModel.findOne({ where: { trackingNumber } });
-      return s?.toJSON() as Shipment | undefined;
-    }
+    const qr = AppDataSource.createQueryRunner();
+    await qr.connect();
+    await qr.startTransaction();
+    try {
+      const teRepo = qr.manager.getRepository(TrackingEventEntity);
+      const shRepo = qr.manager.getRepository(ShipmentEntity);
 
-    async addTrackingEvent(event: InsertTrackingEvent): Promise<TrackingEvent> {
-      // s’assurer que shipmentId est numérique
-      const shipmentId = toNum(event.shipmentId as number | string);
+      // ⚠️ Vérifier que le shipment existe
+      const shipment = await shRepo.findOne({ where: { id: shipmentId } });
+      if (!shipment) {
+        throw Object.assign(new Error("Shipment not found"), { status: 404 });
+      }
 
-      const te = await TrackingEventModel.create({
+      // Créer l’événement (timestamp par défaut: now)
+      const teEntity = teRepo.create({
         ...event,
         shipmentId,
         timestamp: event.timestamp ?? new Date(),
       });
+      const saved = await teRepo.save(teEntity);
 
-      // maj statut
+      // Mettre à jour le statut si présent
       if (event.status) {
-        await ShipmentModel.update(
-          { status: event.status as any }, // ou cast typé
-          { where: { id: shipmentId } }    // <- utilise shipmentId (number), pas event.shipmentId string
-        );
+        await shRepo.update({ id: shipmentId }, { status: event.status as any });
       }
 
-      return te.toJSON() as TrackingEvent;
+      await qr.commitTransaction();
+      return saved as unknown as TrackingEventDTO;
+    } catch (e) {
+      await qr.rollbackTransaction();
+      throw e;
+    } finally {
+      await qr.release();
     }
+  }
 
-    async getShipmentTracking(shipmentId: number | string): Promise<TrackingEvent[]> {
-      const rows = await TrackingEventModel.findAll({
-        where: { shipmentId: toNum(shipmentId) },
-        order: [["timestamp", "DESC"], ["id", "DESC"]],
-      });
-      return rows.map(r => r.toJSON() as TrackingEvent);
-    }
-
+  /** Liste des TrackingEvents d’un shipment (ordonnés par timestamp DESC puis id DESC) */
+  async getShipmentTracking(shipmentId: number | string): Promise<TrackingEventDTO[]> {
+    const repo = AppDataSource.getRepository(TrackingEventEntity);
+    const rows = await repo.find({
+      where: { shipmentId: toNum(shipmentId) },
+      order: { timestamp: "DESC", id: "DESC" },
+    });
+    return rows as unknown as TrackingEventDTO[];
+  }
 }
 
 export const tracking = new TrackingService();

@@ -1,72 +1,171 @@
+// server/entities/Shipment.ts
 import {
-  Model, DataTypes, CreationOptional, InferAttributes, InferCreationAttributes,
-} from "sequelize";
-import { sequelize } from "../sever_config";
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  Index,
+  ManyToOne,
+  OneToMany,
+  JoinColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from "typeorm";
+import { User } from "./User";
+import { Document } from "./Document";
+import { TrackingEvent } from "./TrackingEvent"; // ⬅️ assure-toi de cet import
 
-export class Shipment extends Model<
-  InferAttributes<Shipment>,
-  InferCreationAttributes<Shipment>
-> {
-  declare id: CreationOptional<number>; // INT AUTO_INCREMENT
-  declare trackingNumber: string;
-  declare userId: string | null;        // FK -> users.id (UUID string)
-  declare senderName: string;
-  declare senderEmail: string;
-  declare senderAddress: string;
-  declare senderPhone: string | null;
-  declare recipientName: string;
-  declare recipientEmail: string;
-  declare recipientAddress: string;
-  declare recipientPhone: string | null;
-  declare description: string;
-  declare weight: number;
-  declare volume: number | null;
-  declare value: number;
-  declare hsCode: string | null;
-  declare transportMode: "air" | "sea" | "road";
-  declare originCity: string;
-  declare destinationCity: string;
-  declare estimatedDelivery: Date | null;
-  declare status: "draft" | "confirmed" | "in_transit" | "customs_clearance" | "delivered" | "cancelled";
-  declare totalCost: number | null;
-  declare customsDuty: number | null;
-  declare vat: number | null;
-  declare createdAt: CreationOptional<Date>;
-  declare updatedAt: CreationOptional<Date>;
+// Types d'enum pour plus de sécurité côté TS
+export type TransportMode = "air" | "sea" | "road";
+export type ShipmentStatus =
+  | "draft"
+  | "confirmed"
+  | "in_transit"
+  | "customs_clearance"
+  | "delivered"
+  | "cancelled";
+
+// (Optionnel) Transformer pour lire les DECIMAL MySQL en number JS
+const decimalToNumber = {
+  to: (val?: number | null) => val, // vers DB (laisse TypeORM gérer)
+  from: (val?: string | null) => (val == null ? null : Number(val)),
+};
+
+@Entity({ name: "shipment" })
+export class Shipment {
+  @PrimaryGeneratedColumn({ type: "int", unsigned: true })
+  id!: number;
+
+  @Index({ unique: true })
+  @Column({ type: "varchar", length: 64 })
+  trackingNumber!: string;
+
+  // FK vers user.id (UUID stocké en CHAR(36))
+  @Column({ type: "char", length: 36, nullable: true })
+  userId!: string | null;
+
+  @ManyToOne(() => User, (user) => user.sessions, {
+    // sessions est juste une relation dans User; pas obligatoire ici
+    onDelete: "SET NULL",
+    onUpdate: "CASCADE",
+    nullable: true,
+  })
+  @JoinColumn({ name: "userId" })
+  user!: User | null;
+
+  @Column({ type: "varchar", length: 255 })
+  senderName!: string;
+
+  @Column({ type: "varchar", length: 255 })
+  senderEmail!: string;
+
+  @Column({ type: "varchar", length: 1024 })
+  senderAddress!: string;
+
+  @Column({ type: "varchar", length: 64, nullable: true })
+  senderPhone!: string | null;
+
+  @Column({ type: "varchar", length: 255 })
+  recipientName!: string;
+
+  @Column({ type: "varchar", length: 255 })
+  recipientEmail!: string;
+
+  @Column({ type: "varchar", length: 1024 })
+  recipientAddress!: string;
+
+  @Column({ type: "varchar", length: 64, nullable: true })
+  recipientPhone!: string | null;
+
+  @Column({ type: "text" })
+  description!: string;
+
+  @Column({
+    type: "decimal",
+    precision: 10,
+    scale: 2,
+    transformer: decimalToNumber,
+  })
+  weight!: number;
+
+  @Column({
+    type: "decimal",
+    precision: 10,
+    scale: 4,
+    nullable: true,
+    transformer: decimalToNumber,
+  })
+  volume!: number | null;
+
+  @Column({
+    type: "decimal",
+    precision: 10,
+    scale: 2,
+    transformer: decimalToNumber,
+  })
+  value!: number;
+
+  @Column({ type: "varchar", length: 32, nullable: true })
+  hsCode!: string | null;
+
+  @Column({
+    type: "enum",
+    enum: ["air", "sea", "road"],
+  })
+  transportMode!: TransportMode;
+
+  @Column({ type: "varchar", length: 255 })
+  originCity!: string;
+
+  @Column({ type: "varchar", length: 255 })
+  destinationCity!: string;
+
+  @Column({ type: "datetime", nullable: true })
+  estimatedDelivery!: Date | null;
+
+  @Column({
+    type: "enum",
+    enum: ["draft", "confirmed", "in_transit", "customs_clearance", "delivered", "cancelled"],
+    default: "draft",
+  })
+  status!: ShipmentStatus;
+
+  @Column({
+    type: "decimal",
+    precision: 10,
+    scale: 2,
+    nullable: true,
+    transformer: decimalToNumber,
+  })
+  totalCost!: number | null;
+
+  @Column({
+    type: "decimal",
+    precision: 10,
+    scale: 2,
+    nullable: true,
+    transformer: decimalToNumber,
+  })
+  customsDuty!: number | null;
+
+  @Column({
+    type: "decimal",
+    precision: 10,
+    scale: 2,
+    nullable: true,
+    transformer: decimalToNumber,
+  })
+  vat!: number | null;
+
+  @CreateDateColumn({ type: "datetime" })
+  createdAt!: Date;
+
+  @UpdateDateColumn({ type: "datetime" })
+  updatedAt!: Date;
+
+  // Relation inverse pour Document (Document.shipmentId)
+  @OneToMany(() => Document, (doc) => doc.shipment)
+  documents!: Document[];
+
+  @OneToMany(() => TrackingEvent, (event) => event.shipment)
+  trackingEvents!: TrackingEvent[];
 }
-
-Shipment.init(
-  {
-    id: { type: DataTypes.INTEGER.UNSIGNED, autoIncrement: true, primaryKey: true },
-    trackingNumber: { type: DataTypes.STRING(64), allowNull: false, unique: true },
-    userId: { type: DataTypes.UUID, allowNull: true },
-    senderName: { type: DataTypes.STRING(255), allowNull: false },
-    senderEmail: { type: DataTypes.STRING(255), allowNull: false },
-    senderAddress: { type: DataTypes.STRING(1024), allowNull: false },
-    senderPhone: { type: DataTypes.STRING(64), allowNull: true },
-    recipientName: { type: DataTypes.STRING(255), allowNull: false },
-    recipientEmail: { type: DataTypes.STRING(255), allowNull: false },
-    recipientAddress: { type: DataTypes.STRING(1024), allowNull: false },
-    recipientPhone: { type: DataTypes.STRING(64), allowNull: true },
-    description: { type: DataTypes.TEXT, allowNull: false },
-    weight: { type: DataTypes.DECIMAL(10, 2), allowNull: false },
-    volume: { type: DataTypes.DECIMAL(10, 4), allowNull: true },
-    value: { type: DataTypes.DECIMAL(10, 2), allowNull: false },
-    hsCode: { type: DataTypes.STRING(32), allowNull: true },
-    transportMode: { type: DataTypes.ENUM("air", "sea", "road"), allowNull: false },
-    originCity: { type: DataTypes.STRING(255), allowNull: false },
-    destinationCity: { type: DataTypes.STRING(255), allowNull: false },
-    estimatedDelivery: { type: DataTypes.DATE, allowNull: true },
-    status: {
-      type: DataTypes.ENUM("draft", "confirmed", "in_transit", "customs_clearance", "delivered", "cancelled"),
-      allowNull: false,
-      defaultValue: "draft",
-    },
-    totalCost: { type: DataTypes.DECIMAL(10, 2), allowNull: true },
-    customsDuty: { type: DataTypes.DECIMAL(10, 2), allowNull: true },
-    vat: { type: DataTypes.DECIMAL(10, 2), allowNull: true },
-    createdAt: DataTypes.DATE,
-    updatedAt: DataTypes.DATE,
-  },
-  { sequelize, tableName: "shipment" }
-);

@@ -1,38 +1,35 @@
-import { DataTypes, Model, InferAttributes, InferCreationAttributes, CreationOptional } from "sequelize";
-import { sequelize } from "../sever_config";
+// server/entities/ChatSession.ts
+import {
+  Entity,
+  PrimaryColumn,
+  Column,
+  ManyToOne,
+  JoinColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from "typeorm";
 import { User } from "./User";
 
-export class ChatSession extends Model<InferAttributes<ChatSession>, InferCreationAttributes<ChatSession>> {
-  declare id: CreationOptional<string>;
-  declare userId: string;                 // doit matcher User.id (UUID)
-  declare createdAt: CreationOptional<Date>;
-  declare updatedAt: CreationOptional<Date>;
+@Entity({ name: "chat_session" })
+export class ChatSession {
+  // id: STRING(64), utilisé comme clé primaire
+  @PrimaryColumn({ type: "varchar", length: 64 })
+  id!: string;
+
+  // userId: UUID → référence vers User.id
+  @Column({ type: "char", length: 36 })
+  userId!: string;
+
+  @ManyToOne(() => User, (user) => user.sessions, {
+    onDelete: "CASCADE",
+    onUpdate: "CASCADE",
+  })
+  @JoinColumn({ name: "userId" })
+  user!: User;
+
+  @CreateDateColumn({ type: "datetime" })
+  createdAt!: Date;
+
+  @UpdateDateColumn({ type: "datetime" })
+  updatedAt!: Date;
 }
-
-ChatSession.init(
-  {
-    id: {
-      type: DataTypes.STRING(64),         // OK pour l’id de session
-      primaryKey: true,
-    },
-    userId: {
-      type: DataTypes.UUID,               // <= ICI: même type que User.id
-      allowNull: false,
-      references: { model: "user", key: "id" },
-      onDelete: "CASCADE",
-      onUpdate: "CASCADE",
-    },
-    createdAt: DataTypes.DATE,
-    updatedAt: DataTypes.DATE,
-  },
-  {
-    sequelize,
-    tableName: "chat_session",
-    underscored: false,
-    timestamps: true,
-  }
-);
-
-// Association (si tu les déclares ici)
-ChatSession.belongsTo(User, { foreignKey: "userId", as: "user" });
-User.hasMany(ChatSession, { foreignKey: "userId", as: "sessions" });

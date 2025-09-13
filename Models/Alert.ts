@@ -1,36 +1,46 @@
+// server/entities/Alert.ts
 import {
-  Model, DataTypes, CreationOptional, InferAttributes, InferCreationAttributes,
-} from "sequelize";
-import { sequelize } from "../sever_config";
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  Index,
+} from "typeorm";
 
-export class Alert extends Model<
-  InferAttributes<Alert>,
-  InferCreationAttributes<Alert>
-> {
-  declare id: CreationOptional<number>; // INT AUTO_INCREMENT
-  declare title: string;
-  declare description: string;
-  declare type: string;
-  declare affectedCountries: string[] | null;
-  declare affectedProducts: string[] | null;
-  declare effectiveDate: Date | null;
-  declare isActive: boolean;
-  declare createdAt: CreationOptional<Date>;
-  declare updatedAt: CreationOptional<Date>;
+@Entity({ name: "alert" })
+export class Alert {
+  @PrimaryGeneratedColumn({ type: "int", unsigned: true })
+  id!: number;
+
+  @Index()
+  @Column({ type: "varchar", length: 255 })
+  title!: string;
+
+  @Column({ type: "text" })
+  description!: string;
+
+  @Column({ type: "varchar", length: 64 })
+  type!: string;
+
+  // MySQL 5.7+ : colonne JSON (table existante: DataTypes.JSON)
+  @Column({ type: "json", nullable: true })
+  affectedCountries!: string[] | null;
+
+  @Column({ type: "json", nullable: true })
+  affectedProducts!: string[] | null;
+
+  @Column({ type: "datetime", nullable: true })
+  effectiveDate!: Date | null;
+
+  // Sequelize BOOLEAN => MySQL TINYINT(1) – TypeORM "boolean" convient
+  @Column({ type: "boolean", default: true })
+  isActive!: boolean;
+
+  // Conserve les timestamps camelCase (createdAt / updatedAt)
+  @CreateDateColumn({ type: "datetime" })
+  createdAt!: Date;
+
+  @UpdateDateColumn({ type: "datetime" })
+  updatedAt!: Date;
 }
-
-Alert.init(
-  {
-    id: { type: DataTypes.INTEGER.UNSIGNED, autoIncrement: true, primaryKey: true },
-    title: { type: DataTypes.STRING(255), allowNull: false },
-    description: { type: DataTypes.TEXT, allowNull: false },
-    type: { type: DataTypes.STRING(64), allowNull: false },
-    affectedCountries: { type: DataTypes.JSON, allowNull: true },
-    affectedProducts: { type: DataTypes.JSON, allowNull: true },
-    effectiveDate: { type: DataTypes.DATE, allowNull: true },
-    isActive: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true },
-    createdAt: DataTypes.DATE,
-    updatedAt: DataTypes.DATE,
-  },
-  { sequelize, tableName: "alert" }
-);

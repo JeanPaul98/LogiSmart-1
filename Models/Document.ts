@@ -1,30 +1,42 @@
+// server/entities/Document.ts
 import {
-  Model, DataTypes, CreationOptional, InferAttributes, InferCreationAttributes,
-} from "sequelize";
-import { sequelize } from "../sever_config";
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  JoinColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from "typeorm";
+import { Shipment } from "./Shipment"; // ⚠️ il faudra créer Shipment.ts
 
-export class Document extends Model<
-  InferAttributes<Document>,
-  InferCreationAttributes<Document>
-> {
-  declare id: CreationOptional<number>; // INT AUTO_INCREMENT
-  declare shipmentId: number;           // FK INT
-  declare type: string;
-  declare filename: string;             // aligné avec Zod
-  declare url: string;
-  declare createdAt: CreationOptional<Date>;
-  declare updatedAt: CreationOptional<Date>;
+@Entity({ name: "document" })
+export class Document {
+  @PrimaryGeneratedColumn({ type: "int", unsigned: true })
+  id!: number;
+
+  @Column({ type: "int", unsigned: true })
+  shipmentId!: number;
+
+  @ManyToOne(() => Shipment, (shipment) => shipment.documents, {
+    onDelete: "CASCADE",
+    onUpdate: "CASCADE",
+  })
+  @JoinColumn({ name: "shipmentId" })
+  shipment!: Shipment;
+
+  @Column({ type: "varchar", length: 64 })
+  type!: string;
+
+  @Column({ type: "varchar", length: 255 })
+  filename!: string;
+
+  @Column({ type: "varchar", length: 1024 })
+  url!: string;
+
+  @CreateDateColumn({ type: "datetime" })
+  createdAt!: Date;
+
+  @UpdateDateColumn({ type: "datetime" })
+  updatedAt!: Date;
 }
-
-Document.init(
-  {
-    id: { type: DataTypes.INTEGER.UNSIGNED, autoIncrement: true, primaryKey: true },
-    shipmentId: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false },
-    type: { type: DataTypes.STRING(64), allowNull: false },
-    filename: { type: DataTypes.STRING(255), allowNull: false },
-    url: { type: DataTypes.STRING(1024), allowNull: false },
-    createdAt: DataTypes.DATE,
-    updatedAt: DataTypes.DATE,
-  },
-  { sequelize, tableName: "document" }
-);

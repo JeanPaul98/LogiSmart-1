@@ -1,32 +1,45 @@
+// server/entities/TrackingEvent.ts
 import {
-  Model, DataTypes, CreationOptional, InferAttributes, InferCreationAttributes,
-} from "sequelize";
-import { sequelize } from "../sever_config";
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  JoinColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from "typeorm";
+import { Shipment } from "./Shipment";
 
-export class TrackingEvent extends Model<
-  InferAttributes<TrackingEvent>,
-  InferCreationAttributes<TrackingEvent>
-> {
-  declare id: CreationOptional<number>; // INT AUTO_INCREMENT
-  declare shipmentId: number;           // FK INT
-  declare status: string;
-  declare location: string;
-  declare description: string | null;
-  declare timestamp: Date;
-  declare createdAt: CreationOptional<Date>;
-  declare updatedAt: CreationOptional<Date>;
+@Entity({ name: "tracking_event" })
+export class TrackingEvent {
+  @PrimaryGeneratedColumn({ type: "int", unsigned: true })
+  id!: number;
+
+  @Column({ type: "int", unsigned: true })
+  shipmentId!: number;
+
+  @ManyToOne(() => Shipment, (shipment) => shipment.trackingEvents, {
+    onDelete: "CASCADE",
+    onUpdate: "CASCADE",
+  })
+  @JoinColumn({ name: "shipmentId" })
+  shipment!: Shipment;
+
+  @Column({ type: "varchar", length: 64 })
+  status!: string;
+
+  @Column({ type: "varchar", length: 255 })
+  location!: string;
+
+  @Column({ type: "text", nullable: true })
+  description!: string | null;
+
+  @Column({ type: "datetime", default: () => "CURRENT_TIMESTAMP" })
+  timestamp!: Date;
+
+  @CreateDateColumn({ type: "datetime" })
+  createdAt!: Date;
+
+  @UpdateDateColumn({ type: "datetime" })
+  updatedAt!: Date;
 }
-
-TrackingEvent.init(
-  {
-    id: { type: DataTypes.INTEGER.UNSIGNED, autoIncrement: true, primaryKey: true },
-    shipmentId: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false },
-    status: { type: DataTypes.STRING(64), allowNull: false },
-    location: { type: DataTypes.STRING(255), allowNull: false },
-    description: { type: DataTypes.TEXT, allowNull: true },
-    timestamp: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
-    createdAt: DataTypes.DATE,
-    updatedAt: DataTypes.DATE,
-  },
-  { sequelize, tableName: "tracking_event" }
-);

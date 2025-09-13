@@ -1,64 +1,71 @@
-// src/server/storage.sequelize.ts
-import { Op } from "sequelize";
-import {
-  User as UserModel,
-  Shipment as ShipmentModel,
-  TrackingEvent as TrackingEventModel,
-  Document as DocumentModel,
-  HSCode as HSCodeModel,
-  Alert as RegulatoryAlertModel,
-  ChatMessage as ChatMessageModel,
-} from "../Models";
+// src/server/services/hscode.service.ts
+import { AppDataSource } from "../dbContext/db";
+import { HSCode as HSCodeEntity } from "../Models/HSCode";
+import type { HSCode as HSCodeDTO, InsertHSCode } from "@shared/schema";
+import { insertHSCodeSchema } from "@shared/schema";
+import { Like } from "typeorm";
 
-import {
-  type User,
-  type UpsertUser,
-  type InsertShipment,
-  type Shipment,
-  type InsertTrackingEvent,
-  type TrackingEvent,
-  type InsertDocument,
-  type Document,
-  type HSCode,
-  type InsertChatMessage,
-  type ChatMessage,
-  type RegulatoryAlert,
-} from "@shared/schema";
 
-import { IStorage } from "../Interface/IStorage";
-import { IHSCodes } from "Interface/IHSCodes";
+export class HSCodeService {
+  private repo = AppDataSource.getRepository(HSCodeEntity);
 
-// Petite aide pour convertir proprement vers number (évite NaN)
-const toNum = (v: number | string) => {
-  const n = typeof v === "number" ? v : Number(v);
-  if (Number.isNaN(n)) throw new Error(`Invalid numeric id: ${v}`);
-  return n;
-};
 
-export class HSCodeService implements IHSCodes {
+  /** Crée un HSCode à partir du DTO validé */
+  async createHSCode(input: InsertHSCode): Promise<HSCodeDTO> {
+    // 1) Validation/normalisation (au cas où l'appelant n'a pas déjà validé)
+    const data = insertHSCodeSchema.parse(input);
 
-    // HS CODES
-    async searchHSCodes(query: string): Promise<HSCode[]> {
-      const like = `%${query}%`;
-      const rows = await HSCodeModel.findAll({
-        where: {
-          [Op.or]: [
-            { code: { [Op.like]: like } },
-            { description: { [Op.like]: like } },
-          ],
-        },
-        limit: 25,
-        order: [["code", "ASC"]],
-      });
-      return rows.map(r => r.toJSON() as HSCode);
+    // 2) Optionnel: vérifier l'unicité applicative (en plus de l'unique DB)
+    const exists = await this.repo.findOne({ where: { code: data.code } });
+    if (exists) {
+      throw Object.assign(new Error(`HSCode '${data.code}' existe déjà`), { status: 409 });
     }
 
-    async getHSCode(code: string): Promise<HSCode | undefined> {
-      const row = await HSCodeModel.findOne({ where: { code } }); // <- pas findByPk
-      return row?.toJSON() as HSCode | undefined;
+    // 3) Créer + sauver
+    const entity = this.repo.create({
+      code: data.code,
+      description: data.description,
+      dutyRate: data.dutyRate ?? null,
+      vatRate: data.vatRate ?? null,
+      category: data.category ?? null,
+      restrictions: data.restrictions ?? null,
+    });
+
+    try {
+      const saved = await this.repo.save(entity);
+      return saved as unknown as HSCodeDTO;
+    } catch (err: any) {
+      // Gestion propre de l'unicité côté DB (MySQL: ER_DUP_ENTRY)
+      if (err?.code === "ER_DUP_ENTRY") {
+        throw Object.assign(new Error(`HSCode '${data.code}' existe déjà`), { status: 409 });
+      }
+      throw err;
     }
+  }
 
 
+
+   /** Recherche par code OU description (LIKE %query%), limité à 25, trié par code ASC */
+   async searchHSCodes(query: string): Promise<HSCodeDTO[]> {
+    const like = `%${query}%`;
+    const rows = await this.repo.find({
+      where: [
+        { code: Like(like) },
+        { description: Like(like) },
+      ],
+      take: 25,
+      order: { code: "ASC" },
+    });
+
+    // Entité == DTO (mêmes champs) → cast typé pour la couche sup
+    return rows as unknown as HSCodeDTO[];
+  }
+
+  /** Récupère un HSCode par son code exact (ex: "870899") */
+  async getHSCode(code: string): Promise<HSCodeDTO | undefined> {
+    const row = await this.repo.findOne({ where: { code } });
+    return (row ?? undefined) as unknown as HSCodeDTO | undefined;
+  }
 }
 
-export const hscode = new HSCodeService();
+export const hscodeService = new HSCodeService();

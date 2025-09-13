@@ -1,39 +1,53 @@
-// User peut rester en UUID string (lié à ton auth)
+// server/entities/User.ts
 import {
-  Model, DataTypes, CreationOptional, InferAttributes, InferCreationAttributes,
-} from "sequelize";
-import { sequelize } from "../server/db_config";
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  DeleteDateColumn,
+  OneToMany,
+  Index,
+} from "typeorm";
+import { ChatSession } from "./ChatSession";
 
-export class User extends Model<InferAttributes<User>, InferCreationAttributes<User>> {
-  declare id: CreationOptional<string>;
-  declare email: string | null;
-  declare firstName: string | null;
-  declare lastName: string | null;
-  declare password: string | null;
-  declare profileImageUrl: string | null;
-  declare refreshToken: string | null;
-  declare preferredLanguage: string;
-  declare createdAt: CreationOptional<Date>;
-  declare updatedAt: CreationOptional<Date>;
+@Entity({ name: "user" })
+export class User {
+  // UUID comme Sequelize (defaultValue: UUIDV4)
+  @PrimaryGeneratedColumn("uuid")
+  id!: string;
+
+  @Index({ unique: true })
+  @Column({ type: "varchar", length: 255 })
+  email!: string;
+
+  @Column({ type: "varchar", length: 255, nullable: true })
+  firstName!: string | null;
+
+  @Column({ type: "varchar", length: 255, nullable: true })
+  lastName!: string | null;
+
+  @Column({ type: "varchar", length: 255 })
+  password!: string;
+
+  @Column({ type: "varchar", length: 512, nullable: true })
+  profileImageUrl!: string | null;
+
+  @Column({ type: "varchar", length: 512, nullable: true })
+  refreshToken!: string | null;
+
+  @Column({ type: "varchar", length: 10, default: "fr" })
+  preferredLanguage!: string;
+
+  @OneToMany(() => ChatSession, (session) => session.user)
+  sessions!: ChatSession[];
+
+  @CreateDateColumn({ type: "datetime" })
+  createdAt!: Date;
+
+  @UpdateDateColumn({ type: "datetime" })
+  updatedAt!: Date;
+
+  @DeleteDateColumn({ type: "datetime", nullable: true })
+  deletedAt?: Date | null;
 }
-
-User.init(
-  {
-    id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
-    email: { type: DataTypes.STRING, allowNull: false, unique: true },
-    firstName: { type: DataTypes.STRING, allowNull: true },
-    lastName: { type: DataTypes.STRING, allowNull: true },
-    password: { type: DataTypes.STRING, allowNull: false },
-    profileImageUrl: { type: DataTypes.STRING, allowNull: true },
-    refreshToken: { type: DataTypes.STRING, allowNull: true },
-    preferredLanguage: { type: DataTypes.STRING, allowNull: false, defaultValue: "fr" },
-    createdAt: DataTypes.DATE,
-    updatedAt: DataTypes.DATE,
-  },
-  {
-    sequelize,
-    tableName: "user",
-    underscored: false,
-    timestamps: true,
-  }
-);

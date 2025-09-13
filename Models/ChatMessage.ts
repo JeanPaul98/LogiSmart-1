@@ -1,30 +1,39 @@
+// server/entities/ChatMessage.ts
 import {
-  Model, DataTypes, CreationOptional, InferAttributes, InferCreationAttributes,
-} from "sequelize";
-import { sequelize } from "../sever_config";
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from "typeorm";
 
-export class ChatMessage extends Model<
-  InferAttributes<ChatMessage>,
-  InferCreationAttributes<ChatMessage>
-> {
-  declare id: CreationOptional<number>; // INT AUTO_INCREMENT
-  declare userId: string | null;        // UUID nullable
-  declare sessionId: string;
-  declare role: "user" | "assistant" | "system";
-  declare content: string;
-  declare createdAt: CreationOptional<Date>;
-  declare updatedAt: CreationOptional<Date>;
+export type ChatRole = "user" | "assistant" | "system";
+
+@Entity({ name: "chat_message" })
+export class ChatMessage {
+  @PrimaryGeneratedColumn({ type: "int", unsigned: true })
+  id!: number;
+
+  // UUID nullable
+  @Column({ type: "char", length: 36, nullable: true })
+  userId!: string | null;
+
+  @Column({ type: "varchar", length: 64 })
+  sessionId!: string;
+
+  @Column({
+    type: "enum",
+    enum: ["user", "assistant", "system"],
+    default: "user",
+  })
+  role!: ChatRole;
+
+  @Column({ type: "text" })
+  content!: string;
+
+  @CreateDateColumn({ type: "datetime" })
+  createdAt!: Date;
+
+  @UpdateDateColumn({ type: "datetime" })
+  updatedAt!: Date;
 }
-
-ChatMessage.init(
-  {
-    id: { type: DataTypes.INTEGER.UNSIGNED, autoIncrement: true, primaryKey: true },
-    userId: { type: DataTypes.UUID, allowNull: true },
-    sessionId: { type: DataTypes.STRING(64), allowNull: false },
-    role: { type: DataTypes.ENUM("user", "assistant", "system"), allowNull: false, defaultValue: "user" },
-    content: { type: DataTypes.TEXT, allowNull: false },
-    createdAt: DataTypes.DATE,
-    updatedAt: DataTypes.DATE,
-  },
-  { sequelize, tableName: "chat_message" }
-);
