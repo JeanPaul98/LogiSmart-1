@@ -1,14 +1,14 @@
 // src/db/data-source.ts
 import "reflect-metadata";
 import { DataSource } from "typeorm";
-import { User } from "../entities/User";
-import { Shipment } from "../entities/Shipment";
-import { TrackingEvent } from "../entities/TrackingEvent";
-import { Document } from "../entities/Document";
-import { Alert } from "../entities/Alert";
-import { HSCode } from "../entities/HSCode";
-import { ChatSession } from "../entities/ChatSession";
-import { ChatMessage } from "../entities/ChatMessage";
+import { User } from "../Models/User";
+import { Shipment } from "../Models/Shipment";
+import { TrackingEvent } from "../Models/TrackingEvent";
+import { Document } from "../Models/Document";
+import { Alert } from "../Models/Alert";
+import { HSCode } from "../Models/HSCode";
+import { ChatSession } from "../Models/ChatSession";
+import { ChatMessage } from "../Models/ChatMessage";
 
 export const AppDataSource = new DataSource({
   type: "mysql",

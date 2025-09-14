@@ -1,9 +1,23 @@
-// src/db/index.ts
+// src/db/index.ts  (NEW: safe, single init)
+import "dotenv/config";
 import { AppDataSource } from "../dbContext/db";
+import type { DataSource } from "typeorm";
 
-export async function connectDB() {
-  if (!AppDataSource.isInitialized) {
-    await AppDataSource.initialize();
+let initPromise: Promise<DataSource> | null = null;
+
+export async function connectDB(): Promise<DataSource> {
+  if (AppDataSource.isInitialized) return AppDataSource;
+  if (!initPromise) {
+    initPromise = AppDataSource.initialize()
+      .then(ds => {
+        console.log("[DB] connected");
+        return ds;
+      })
+      .catch(err => {
+        // reset so a future retry can happen
+        initPromise = null;
+        throw err;
+      });
   }
-  console.log("DB connected.");
+  return initPromise;
 }

@@ -1,8 +1,20 @@
+// server/server.ts (or server/index.ts)
+import "dotenv/config";
+import express from "express";
 import { connectDB } from "../dbContext";
-import app from "../server/app";
+
+const app = express();
 
 (async () => {
-  await connectDB();
-  const port = Number(process.env.PORT ?? 3000);
-  app.listen(port, () => console.log(`HTTP on :${port}`));
+  try {
+    await connectDB();  
+
+    const port = Number(process.env.PORT ?? 5000);
+    app.listen(port, () =>
+      console.log(`[BOOT] listening on http://localhost:${port}`)
+    );
+  } catch (e) {
+    console.error("[BOOT ERROR]", e);
+    process.exit(1);
+  }
 })();

@@ -1,7 +1,7 @@
 {
   "include": [
     "Services",
-    "entities",
+    "Models",
     "dbContext",
     "Interface",
     "client/src/**/*",

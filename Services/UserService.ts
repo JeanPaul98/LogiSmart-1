@@ -1,6 +1,6 @@
 // src/server/storage.typeorm.user.ts
 import { AppDataSource } from "../dbContext/db";
-import { User as UserEntity } from "../entities/User";
+import { User as UserEntity } from "../Models/User";
 import type { User, InsertUser } from "@shared/schema"; // DTO Zod
 import { IUser } from "../Interface/IUser";
 

@@ -1,6 +1,6 @@
 // src/server/storage.typeorm.alert.ts
 import { AppDataSource } from "../dbContext/db";
-import { Alert as RegulatoryAlertEntity } from "../entities/Alert";
+import { Alert as RegulatoryAlertEntity } from "../Models/Alert";
 import { type RegulatoryAlert, type InsertRegulatoryAlert } from "@shared/schema";
 import { IAlerts } from "../Interface/IAlerts";
 
