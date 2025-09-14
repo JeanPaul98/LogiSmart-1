@@ -5,12 +5,17 @@ import { alert } from "../Controller/AlertController"
 import { createShipments, getShipments, getShipmentById } from "../Controller/ChipmentsController"
 import { create, search } from "../Controller/HsCodesController"
 import { gettracking, createtracking } from "../Controller/TrackingController"
+import { createUser, getUserById } from "../Controller/UserController"
+
 
 export async function routes(app: Express): Promise<Server> {
 
+  //User
+  app.post('/api/user/create', createUser);
+  app.get('/api/user/:id', getUserById);
 
   //Chipments routes
-  app.post('/api/shipments', createShipments);
+  app.post('/api/shipments/create', createShipments);
   app.get('/api/shipments/list', getShipments);
   app.get('/api/shipments/:id', getShipmentById);
 

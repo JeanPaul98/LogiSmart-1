@@ -3,6 +3,7 @@ import "dotenv/config";
 import express from "express";
 import { connectDB } from "../dbContext";
 import { setupVite, serveStatic, log } from "./vite";
+import { routes } from "../Routes/routes";
 
 
 const app = express();
