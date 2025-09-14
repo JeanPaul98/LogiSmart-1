@@ -11,6 +11,10 @@ const app = express();
   try {
     await connectDB();  
 
+    // Enregistre routes applicatives
+    const server = await routes(app);
+
+  
     const port = Number(process.env.PORT ?? 5000);
     app.listen(port, () =>
       console.log(`[BOOT] listening on http://localhost:${port}`)
@@ -25,7 +29,7 @@ const app = express();
       console.log("[STATIC] serving built files");
     }
 
-    
+
   } catch (e) {
     console.error("[BOOT ERROR]", e);
     process.exit(1);
