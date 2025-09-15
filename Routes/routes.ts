@@ -1,0 +1,41 @@
+import type { Express } from "express";
+import { createServer, type Server } from "http";
+import { calculShipment, estimationShipment } from "../Controller/CalculateController";
+import { alert } from "../Controller/AlertController"
+import { createShipments, getShipments, getShipmentById } from "../Controller/ChipmentsController"
+import { create, search } from "../Controller/HsCodesController"
+import { createTrackingEvent, getShipmentTracking, getShipmentByTrackingNumber} from "../Controller/TrackingController"
+import { createUser, getUserById } from "../Controller/UserController"
+
+
+export async function routes(app: Express): Promise<Server> {
+
+  // User
+  app.post('/api/user/create', createUser);
+  app.get('/api/user/:id', getUserById);
+
+  // Shipments
+  app.post('/api/shipments/create', createShipments);
+  app.get('/api/shipments/list', getShipments);
+  app.get('/api/shipments/:id', getShipmentById);
+
+  // Alerts
+  app.get('/api/alerts', alert);
+
+  // Calculate
+  app.post("/api/tariff/estimate", estimationShipment);
+  app.post("/api/shipment/:id/tariff", calculShipment);
+
+  // HS codes
+  app.get('/api/hs-codes/search', search);
+  app.get('/api/hs-codes/:code', create);
+
+  // Tracking
+  app.post("/api/shipment/:shipmentId/tracking", createTrackingEvent);
+  app.get("/api/shipment/:shipmentId/tracking", getShipmentTracking);
+  app.get("/api/shipment/tracking/:trackingNumber", getShipmentByTrackingNumber);
+
+  // Crée et retourne le serveur HTTP
+  const server = createServer(app);
+  return server;
+}
