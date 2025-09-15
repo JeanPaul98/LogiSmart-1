@@ -2,7 +2,7 @@ import MainLayout from "@/components/layout/MainLayout";
 import React, { useMemo, useState } from "react";
 
 // -----------------------------
-// Types
+// Types (inchangés)
 // -----------------------------
 type Party = {
   company: string;
@@ -13,14 +13,14 @@ type Party = {
   cityZip: string;
   country: string;
   ref?: string;
-  notes?: string; // livraison
+  notes?: string;
 };
 
 type ShipmentDetails = {
   transportMode: "Aérien" | "Maritime" | "Routier" | "" | "Aérien / Maritime / Routier";
   incoterm: "EXW" | "FOB" | "CIF" | "DDP" | "" | "EXW / FOB / CIF / DDP";
   flow: "Exportation" | "Importation" | "Exportation / Importation";
-  pickupDate: string; // JJ/MM/AAAA
+  pickupDate: string;
   insurance: "Oui" | "Non" | "Oui / Non";
   payment: "Prépayé" | "Collecte" | "Prépayé / Collecte";
   pickupPlace: string;
@@ -42,11 +42,11 @@ type ParcelLine = {
 };
 
 type ParcelsBlock = {
-  count: string; // “Ex: 3”
-  totalWeight: string; // “Ex: 25 kg”
-  dimensions: string; // “L x l x h”
-  declaredValue: string; // “1 200 USD”
-  mainHs: string; // “8471.30”
+  count: string;
+  totalWeight: string;
+  dimensions: string;
+  declaredValue: string;
+  mainHs: string;
   description: string;
   dangerous: "Oui" | "Non" | "Oui / Non";
   dangerousDetails?: string;
@@ -60,27 +60,15 @@ type ServicesBlock = {
   insuranceDeclared: boolean;
   customsIncluded: boolean;
   delivery: "Domicile" | "Point relais" | "À domicile / Point relais" | "";
-  pickupSchedule: string; // texte libre
+  pickupSchedule: string;
   packagingPro: boolean;
   notifyEmailSms: boolean;
-  options: {
-    pod: boolean;
-    signature: boolean;
-    priority: boolean;
-  };
+  options: { pod: boolean; signature: boolean; priority: boolean };
   estimate: {
-    transport: number;
-    transportUnit: "USD";
-    transportTax: "HT" | "TTC";
-    customs: number;
-    customsUnit: "USD";
-    customsTax: "HT" | "TTC";
-    insurance: number;
-    insuranceUnit: "USD";
-    insuranceTax: "HT" | "TTC";
-    taxes: number;
-    taxesUnit: "USD";
-    taxesTax: "HT" | "TTC";
+    transport: number; transportUnit: "USD"; transportTax: "HT" | "TTC";
+    customs: number; customsUnit: "USD"; customsTax: "HT" | "TTC";
+    insurance: number; insuranceUnit: "USD"; insuranceTax: "HT" | "TTC";
+    taxes: number; taxesUnit: "USD"; taxesTax: "HT" | "TTC";
   };
   paymentMethod: "Carte" | "Virement" | "Compte" | "Carte / Virement / Compte";
   carrierNotes?: string;
@@ -89,7 +77,7 @@ type ServicesBlock = {
 };
 
 // -----------------------------
-// Helpers
+// Helpers (léger tuning UI)
 // -----------------------------
 type SectionProps = {
   title: string;
@@ -100,10 +88,10 @@ type SectionProps = {
 };
 
 const Section = ({ title, subtitle, right, className, children }: SectionProps) => (
-  <div className={`bg-white border border-gray-200 rounded-xl p-5 ${className || ""}`}>
-    <div className="flex items-start justify-between mb-4">
-      <div>
-        <h3 className="text-[15px] font-semibold text-gray-900">{title}</h3>
+  <div className={`bg-white border border-gray-200 rounded-xl p-4 sm:p-5 ${className || ""}`}>
+    <div className="flex items-start justify-between gap-3 mb-3 sm:mb-4">
+      <div className="min-w-0">
+        <h3 className="text-[15px] font-semibold text-gray-900 truncate">{title}</h3>
         {subtitle ? <p className="text-xs text-gray-500 mt-1">{subtitle}</p> : null}
       </div>
       {right}
@@ -123,8 +111,9 @@ type InputProps = React.InputHTMLAttributes<HTMLInputElement> & { children?: Rea
 const Input = (props: InputProps) => (
   <input
     {...props}
+    inputMode={props.type === "number" ? "decimal" : props.inputMode}
     className={
-      "w-full px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px] " +
+      "w-full px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px] placeholder:text-gray-400 " +
       (props.className || "")
     }
   />
@@ -132,7 +121,7 @@ const Input = (props: InputProps) => (
 
 type FieldProps = { label: string; id?: string; children?: React.ReactNode };
 const Field = ({ label, id, children }: FieldProps) => (
-  <div>
+  <div className="min-w-0">
     <Label htmlFor={id}>{label}</Label>
     {children}
   </div>
@@ -142,7 +131,7 @@ type StepPillProps = { index: number; title: string; active?: boolean; done?: bo
 const StepPill = ({ index, title, active, done }: StepPillProps) => (
   <div
     className={
-      "flex items-center gap-2 px-3 py-2 rounded-lg border " +
+      "flex items-center gap-2 px-3 py-2 rounded-lg border shrink-0 " +
       (active
         ? "bg-blue-50 border-blue-200 text-blue-700"
         : done
@@ -158,14 +147,14 @@ const StepPill = ({ index, title, active, done }: StepPillProps) => (
     >
       {index}
     </span>
-    <span className="text-[13px] font-medium">{title}</span>
+    <span className="text-[13px] font-medium whitespace-nowrap">{title}</span>
   </div>
 );
 
-// clamp qui renvoie exactement 1|2|3|4
+// clamp qui renvoie 1|2|3|4
 const clampStep = (n: number): 1 | 2 | 3 | 4 => {
   const v = Math.max(1, Math.min(4, n));
-  return (v as 1 | 2 | 3 | 4);
+  return v as 1 | 2 | 3 | 4;
 };
 
 // -----------------------------
@@ -240,18 +229,10 @@ export default function CreateShipment() {
     notifyEmailSms: true,
     options: { pod: true, signature: false, priority: false },
     estimate: {
-      transport: 1050,
-      transportUnit: "USD",
-      transportTax: "HT",
-      customs: 120,
-      customsUnit: "USD",
-      customsTax: "HT",
-      insurance: 12,
-      insuranceUnit: "USD",
-      insuranceTax: "HT",
-      taxes: 85,
-      taxesUnit: "USD",
-      taxesTax: "TTC",
+      transport: 1050, transportUnit: "USD", transportTax: "HT",
+      customs: 120, customsUnit: "USD", customsTax: "HT",
+      insurance: 12, insuranceUnit: "USD", insuranceTax: "HT",
+      taxes: 85, taxesUnit: "USD", taxesTax: "TTC",
     },
     paymentMethod: "Carte / Virement / Compte",
     carrierNotes: "",
@@ -281,11 +262,11 @@ export default function CreateShipment() {
   };
 
   const RecapCompact = () => (
-    <div className="text-right bg-white border border-gray-200 rounded-xl p-5">
+    <div className="text-right bg-white border border-gray-200 rounded-xl p-4 sm:p-5">
       <div className="text-sm text-gray-500">Expéditeur</div>
-      <div className="font-semibold text-gray-900">{sender.company}, {sender.cityZip.split("•")[0]}</div>
+      <div className="font-semibold text-gray-900 truncate">{sender.company}, {sender.cityZip.split("•")[0]}</div>
       <div className="mt-3 text-sm text-gray-500">Destinataire</div>
-      <div className="font-semibold text-gray-900">{receiver.company}, {receiver.cityZip.split("•")[0]}</div>
+      <div className="font-semibold text-gray-900 truncate">{receiver.company}, {receiver.cityZip.split("•")[0]}</div>
       <div className="border-t my-4" />
       <div className="space-y-1 text-sm">
         <div><span className="text-gray-500">Colis </span><span className="font-semibold">{parcels.count.replace("Ex:","").trim() || "3"}</span></div>
@@ -298,23 +279,24 @@ export default function CreateShipment() {
   );
 
   return (
-
     <MainLayout>
-      {/*<main className="max-w-6xl mx-auto px-4 py-6">*/}
-        <h1 className="text-xl md:text-2xl font-bold text-gray-900">Créer un nouvel envoi</h1>
-        {/* Stepper */}
-        <div className="mt-4 flex flex-wrap gap-3">
+      <div className="w-full px-3 sm:px-4 lg:px-6 py-4 lg:py-6">
+        <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">Créer un nouvel envoi</h1>
+
+        {/* Stepper : scrollable en mobile */}
+        <div className="mt-4 flex items-center gap-3 overflow-x-auto no-scrollbar pr-1">
           <StepPill index={1} title="Expéditeur & Destinataire" active={step === 1} done={step > 1} />
           <StepPill index={2} title="Détails d’envoi" active={step === 2} done={step > 2} />
           <StepPill index={3} title="Colis & Marchandises" active={step === 3} done={step > 3} />
           <StepPill index={4} title="Services & Résumé" active={step === 4} />
-          <div className="ml-auto text-xs text-gray-500">Étape {step} sur 4</div>
+          <div className="ml-auto text-xs text-gray-500 shrink-0">Étape {step} sur 4</div>
         </div>
+
         {/* CONTENT */}
         <div className="mt-5 grid grid-cols-1 gap-5">
           {step === 1 && (
             <Section title="Informations expéditeur">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Field label="Nom / Entreprise">
                   <Input value={sender.company} onChange={(e) => setSender({ ...sender, company: e.target.value })} />
                 </Field>
@@ -345,7 +327,7 @@ export default function CreateShipment() {
 
           {step === 1 && (
             <Section title="Informations destinataire">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Field label="Nom / Entreprise">
                   <Input value={receiver.company} onChange={(e) => setReceiver({ ...receiver, company: e.target.value })} />
                 </Field>
@@ -373,16 +355,16 @@ export default function CreateShipment() {
               </div>
 
               {/* Récap rapide */}
-              <div className="mt-4 bg-gray-50 border border-gray-200 rounded-lg p-4">
-                <div className="flex items-start gap-4">
+              <div className="mt-4 bg-gray-50 border border-gray-200 rounded-lg p-3 sm:p-4">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-start gap-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
                       <div className="h-8 w-8 rounded-full bg-pink-100 overflow-hidden flex items-center justify-center">
                         <span className="text-xs font-semibold text-pink-700">A</span>
                       </div>
-                      <div>
-                        <div className="text-sm font-semibold text-gray-900">{sender.company || "—"}</div>
-                        <div className="text-xs text-gray-500">{sender.cityZip || sender.country}</div>
+                      <div className="min-w-0">
+                        <div className="text-sm font-semibold text-gray-900 truncate">{sender.company || "—"}</div>
+                        <div className="text-xs text-gray-500 truncate">{sender.cityZip || sender.country}</div>
                       </div>
                     </div>
                   </div>
@@ -391,9 +373,9 @@ export default function CreateShipment() {
                       <div className="h-8 w-8 rounded-full bg-blue-100 overflow-hidden flex items-center justify-center">
                         <span className="text-xs font-semibold text-blue-700">B</span>
                       </div>
-                      <div>
-                        <div className="text-sm font-semibold text-gray-900">{receiver.company || "—"}</div>
-                        <div className="text-xs text-gray-500">{receiver.cityZip || receiver.country}</div>
+                      <div className="min-w-0">
+                        <div className="text-sm font-semibold text-gray-900 truncate">{receiver.company || "—"}</div>
+                        <div className="text-xs text-gray-500 truncate">{receiver.cityZip || receiver.country}</div>
                       </div>
                     </div>
                   </div>
@@ -485,7 +467,7 @@ export default function CreateShipment() {
                 </Field>
               </div>
 
-              <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="mt-4 grid grid-cols-1 xl:grid-cols-2 gap-4">
                 <Field label="Description des marchandises">
                   <Input value={parcels.description} onChange={(e) => setParcels({ ...parcels, description: e.target.value })} />
                 </Field>
@@ -500,8 +482,8 @@ export default function CreateShipment() {
               {/* Lignes articles */}
               <div className="mt-5 space-y-3">
                 {parcels.lines.map((line, i) => (
-                  <div key={i} className="grid grid-cols-12 gap-3 bg-gray-50 border border-gray-200 rounded-lg p-3">
-                    <div className="col-span-2">
+                  <div key={i} className="grid grid-cols-1 sm:grid-cols-12 gap-3 bg-gray-50 border border-gray-200 rounded-lg p-3">
+                    <div className="sm:col-span-2">
                       <Label>Qté</Label>
                       <Input
                         type="number"
@@ -514,7 +496,7 @@ export default function CreateShipment() {
                         }}
                       />
                     </div>
-                    <div className="col-span-4">
+                    <div className="sm:col-span-4">
                       <Label>Désignation</Label>
                       <Input
                         value={line.designation}
@@ -525,7 +507,7 @@ export default function CreateShipment() {
                         }}
                       />
                     </div>
-                    <div className="col-span-2">
+                    <div className="sm:col-span-2">
                       <Label>Poids (kg)</Label>
                       <Input
                         type="number"
@@ -539,7 +521,7 @@ export default function CreateShipment() {
                         }}
                       />
                     </div>
-                    <div className="col-span-2">
+                    <div className="sm:col-span-2">
                       <Label>Valeur (USD)</Label>
                       <Input
                         type="number"
@@ -553,7 +535,7 @@ export default function CreateShipment() {
                         }}
                       />
                     </div>
-                    <div className="col-span-2">
+                    <div className="sm:col-span-2">
                       <Label>Code SH</Label>
                       <Input
                         value={line.codeHs}
@@ -590,7 +572,7 @@ export default function CreateShipment() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
               <div className="lg:col-span-2 space-y-5">
                 <Section title="Sélection des services">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                     <button
                       type="button"
                       onClick={() => setServices({ ...services, serviceMode: "Express" })}
@@ -688,7 +670,7 @@ export default function CreateShipment() {
                 <RecapCompact />
 
                 <Section title="Devis estimatif" className="space-y-3">
-                  <div className="grid grid-cols-3 gap-3 items-center">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-center">
                     <Label>Transport</Label>
                     <Input
                       type="number"
@@ -777,29 +759,29 @@ export default function CreateShipment() {
           )}
         </div>
 
-        {/* Footer actions */}
-        <div className="mt-6 flex items-center justify-between">
+        {/* Footer actions : stack en mobile */}
+        <div className="mt-6 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
           <button
             type="button"
             onClick={saveDraft}
-            className="px-4 py-2 rounded-md text-sm text-gray-500 bg-gray-100 border border-gray-200"
+            className="w-full sm:w-auto px-4 py-2 rounded-md text-sm text-gray-600 bg-gray-100 border border-gray-200"
           >
             Enregistrer comme brouillon
           </button>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center gap-3">
             {step > 1 ? (
               <button
                 type="button"
                 onClick={back}
-                className="px-4 py-2 rounded-md text-sm text-gray-700 bg-white border border-gray-300 hover:bg-gray-50"
+                className="w-full sm:w-auto px-4 py-2 rounded-md text-sm text-gray-700 bg-white border border-gray-300 hover:bg-gray-50"
               >
                 Retour
               </button>
             ) : (
               <button
                 type="button"
-                className="px-4 py-2 rounded-md text-sm text-gray-400 bg-gray-100 border border-gray-200 cursor-not-allowed"
+                className="w-full sm:w-auto px-4 py-2 rounded-md text-sm text-gray-400 bg-gray-100 border border-gray-200 cursor-not-allowed"
                 disabled
               >
                 Retour
@@ -810,7 +792,7 @@ export default function CreateShipment() {
               <button
                 type="button"
                 onClick={next}
-                className="px-4 py-2 rounded-md text-sm text-white bg-blue-600 hover:bg-blue-700"
+                className="w-full sm:w-auto px-4 py-2 rounded-md text-sm text-white bg-blue-600 hover:bg-blue-700"
               >
                 Suivant
               </button>
@@ -818,14 +800,14 @@ export default function CreateShipment() {
               <button
                 type="button"
                 onClick={finalize}
-                className="px-4 py-2 rounded-md text-sm text-white bg-blue-600 hover:bg-blue-700"
+                className="w-full sm:w-auto px-4 py-2 rounded-md text-sm text-white bg-blue-600 hover:bg-blue-700"
               >
                 Finaliser l’envoi
               </button>
             )}
           </div>
         </div>
-     { /*</main>*/}
+      </div>
     </MainLayout>
   );
 }
