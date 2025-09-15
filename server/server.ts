@@ -1,77 +1,28 @@
-// server/index.ts
-import 'dotenv/config';
+import "reflect-metadata";
+import "dotenv/config";
 import express, { type Request, type Response, type NextFunction } from "express";
 import { setupVite, serveStatic, log } from "./vite";
 import { routes } from "../Routes/routes";
-import { assertDbConnection, sequelize, createDatabaseIfNotExists } from "./db_config";
-import { initModelsAndAssociations } from "../Models/"; // charge modèles/associations
-
+import { AppDataSource } from "../dbContext/db";
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// 🔊 Logs d’amorçage
 console.log(`[BOOT] NODE_ENV=${process.env.NODE_ENV} PORT=${process.env.PORT || 5000}`);
 
-// Endpoint santé très tôt (avant tout)
 app.get("/api/health", (_req, res) => {
   res.json({ ok: true, env: process.env.NODE_ENV, time: new Date().toISOString() });
 });
 
-// Logging middleware API
-app.use((req, res, next) => {
-  const start = Date.now();
-  const path = req.path;
-  let capturedJsonResponse: Record<string, any> | undefined;
-
-  const originalResJson: (body: any, ...args: any[]) => Response = res.json.bind(res);
-  (res as any).json = function (bodyJson: any, ...args: any[]) {
-    capturedJsonResponse = bodyJson;
-    return originalResJson(bodyJson, ...args);
-  };
-
-  res.on("finish", () => {
-    const duration = Date.now() - start;
-    if (path.startsWith("/api")) {
-      let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
-      if (capturedJsonResponse) {
-        try { logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`; } catch { }
-      }
-      if (logLine.length > 200) logLine = logLine.slice(0, 199) + "…";
-      console.log(`[API] ${logLine}`);
-    }
-  });
-
-  next();
-});
-
-// 🔒 Pièges à erreurs globales utiles en dev
-process.on("uncaughtException", (err) => {
-  console.error("[FATAL] uncaughtException:", err);
-});
-process.on("unhandledRejection", (reason) => {
-  console.error("[FATAL] unhandledRejection:", reason);
-});
-
 (async () => {
   try {
-    // Crée la base si besoin avant de se connecter
-    await createDatabaseIfNotExists();
-    // DB d’abord
-    await assertDbConnection();
-    initModelsAndAssociations();
-    console.log("[DB] connected");
+    // Initialisation DB TypeORM
+    await AppDataSource.initialize();
+    console.log("[DB] TypeORM connected");
 
-    if (process.env.NODE_ENV === "development") {
-      await sequelize.sync({ alter: true });
-      console.log("[DB] sequelize synced (alter=true)");
-    }
-
-    // Enregistre routes applicatives
     const server = await routes(app);
 
-    // Middleware erreurs centralisé
     app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
       const status = err.status || err.statusCode || 500;
       const message = err.message || "Internal Server Error";
@@ -79,7 +30,6 @@ process.on("unhandledRejection", (reason) => {
       res.status(status).json({ message });
     });
 
-    // Front: Vite en dev, static en prod
     if (process.env.NODE_ENV === "development") {
       await setupVite(app, server);
       console.log("[VITE] dev middleware enabled");

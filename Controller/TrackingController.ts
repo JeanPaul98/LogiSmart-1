@@ -1,44 +1,81 @@
+// src/server/controllers/tracking.controller.ts
 import type { Request, Response } from "express";
-import { createServer, type Server } from "http";
 import { tracking } from "../Services/TrackingService";
-import { document } from "../Services/DocumentService";
-import { insertShipmentSchema, insertTrackingEventSchema } from "@shared/schema";
+import { insertTrackingEventSchema } from "@shared/schema";
 
-  // Tracking routes
-  export const gettracking = async (req:Request, res:Response) => {
-    try {
-      const shipment = await tracking.getShipmentByTracking(req.params.trackingNumber);
-      if (!shipment) {
-        return res.status(404).json({ message: "Tracking number not found" });
-      }
+/**
+ * POST /api/shipment/:shipmentId/tracking
+ */
+export const createTrackingEvent = async (req: Request, res: Response) => {
+  try {
+    const eventData = insertTrackingEventSchema.parse({
+      ...req.body,
+      shipmentId: req.params.shipmentId,
+    });
 
-      // ✅ BORNER l’ID
-      const shipmentId = typeof shipment.id === 'number' ? shipment.id : Number(shipment.id);
-      if (!Number.isFinite(shipmentId)) {
-        return res.status(500).json({ message: "Invalid shipment id" });
-      }
+    const savedEvent = await tracking.addTrackingEvent(eventData);
 
-      const trackingEvents = await tracking.getShipmentTracking(shipmentId);
-      const documents = await document.getShipmentDocuments(shipmentId);
+    res.status(201).json({
+      success: true,
+      message: "Tracking event created",
+      data: savedEvent,
+    });
+  } catch (err: any) {
+    console.error("Error adding tracking event:", err);
+    res.status(err.message === "Shipment not found" ? 404 : 500).json({
+      success: false,
+      message: err.message || "Failed to add tracking event",
+    });
+  }
+};
 
-      res.json({ shipment, trackingEvents, documents });
-    } catch (error) {
-      console.error("Error tracking shipment:", error);
-      res.status(500).json({ message: "Failed to track shipment" });
-    }
-  };
+/**
+ * GET /api/shipment/:shipmentId/tracking
+ */
+export const getShipmentTracking = async (req: Request, res: Response) => {
+  try {
+    const shipmentId = req.params.shipmentId;
+    const trackingEvents = await tracking.getShipmentTracking(shipmentId);
 
-  export const createtracking = async (req:Request, res:Response) => {
-    try {
-      const eventData = insertTrackingEventSchema.parse({
-        ...req.body,
-        shipmentId: req.params.shipmentId, // z.coerce.number() va convertir
+    res.status(200).json({
+      success: true,
+      message: "Shipment tracking events retrieved",
+      data: trackingEvents,
+    });
+  } catch (err: any) {
+    console.error("Error fetching shipment tracking:", err);
+    res.status(500).json({
+      success: false,
+      message: err.message || "Failed to fetch tracking events",
+    });
+  }
+};
+
+/**
+ * GET /api/shipment/tracking/:trackingNumber
+ */
+export const getShipmentByTrackingNumber = async (req: Request, res: Response) => {
+  try {
+    const trackingNumber = req.params.trackingNumber;
+    const shipment = await tracking.getShipmentByTracking(trackingNumber);
+
+    if (!shipment) {
+      return res.status(404).json({
+        success: false,
+        message: "Shipment not found",
       });
-      const trackingEvent = await tracking.addTrackingEvent(eventData);
-      res.json(trackingEvent);
-    } catch (error) {
-      console.error("Error adding tracking event:", error);
-      res.status(500).json({ message: "Failed to add tracking event" });
     }
-  };
 
+    res.status(200).json({
+      success: true,
+      message: "Shipment retrieved",
+      data: shipment,
+    });
+  } catch (err: any) {
+    console.error("Error fetching shipment by tracking number:", err);
+    res.status(500).json({
+      success: false,
+      message: err.message || "Failed to fetch shipment",
+    });
+  }
+};

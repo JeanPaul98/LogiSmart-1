@@ -6,12 +6,14 @@ import {
   Index,
   ManyToOne,
   OneToMany,
+  OneToOne,
   JoinColumn,
   CreateDateColumn,
   UpdateDateColumn,
 } from "typeorm";
 import { User } from "./User";
 import { Document } from "./Document";
+import { ShipmentTariff } from "./ShipmentTCalcul";
 import { TrackingEvent } from "./TrackingEvent"; // ⬅️ assure-toi de cet import
 
 // Types d'enum pour plus de sécurité côté TS
@@ -72,6 +74,10 @@ export class Shipment {
 
   @Column({ type: "varchar", length: 1024 })
   recipientAddress!: string;
+
+  @OneToOne(() => ShipmentTariff, (tariff) => tariff.shipment)
+  tariff!: ShipmentTariff;
+
 
   @Column({ type: "varchar", length: 64, nullable: true })
   recipientPhone!: string | null;
