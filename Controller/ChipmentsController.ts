@@ -4,6 +4,66 @@ import { shipment } from "../Services/ShipmentService";      // Service Shipment
 import { tracking } from "../Services/TrackingService";      // ⬅️ AJOUT : Service Tracking (TypeORM)
 import { insertShipmentSchema } from "@shared/schema";
 
+
+/**
+ * @swagger
+ * tags:
+ *   name: Shipments
+ *   description: Gestion des expéditions
+ */
+
+/**
+ * @swagger
+ * /api/shipments/create:
+ *   post:
+ *     summary: Créer une nouvelle expédition
+ *     tags: [Shipments]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - sender
+ *               - recipient
+ *               - weight
+ *             properties:
+ *               sender:
+ *                 type: string
+ *                 example: "Jean Dupont"
+ *               recipient:
+ *                 type: string
+ *                 example: "Marie Claire"
+ *               weight:
+ *                 type: number
+ *                 example: 12.5
+ *               address:
+ *                 type: string
+ *                 example: "123 Rue Principale, Montréal, QC"
+ *     responses:
+ *       201:
+ *         description: Expédition créée avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: string
+ *                   example: "ship_12345"
+ *                 sender:
+ *                   type: string
+ *                 recipient:
+ *                   type: string
+ *                 weight:
+ *                   type: number
+ *                 address:
+ *                   type: string
+ *       400:
+ *         description: Données invalides
+ */
+
 // POST /api/shipments
 export const createShipments = async (req: any, res: Response) => {
   try {
