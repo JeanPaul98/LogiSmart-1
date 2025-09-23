@@ -75,9 +75,9 @@ const StepPill = ({ index, title, active, done }: StepPillProps) => (
   </div>
 );
 
-const clampStep = (n: number): 1 | 2 | 3 => {
+const clampStep = (n: number): 1 | 2  => {
   const v = Math.max(1, Math.min(3, n));
-  return v as 1 | 2 | 3;
+  return v as 1 | 2 ;
 };
 
 /* -----------------------------
@@ -105,7 +105,7 @@ type OptionsState = {
 };
 
 export default function CalculTarif() {
-  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [step, setStep] = useState<1 | 2 >(1);
 
   // Formulaire (étape 1)
   const [form, setForm] = useState<FormState>({
@@ -168,7 +168,7 @@ export default function CalculTarif() {
     const volume = parseFloat(form.volume.replace(/[^\d.]/g, "")) || 0;
     const coef = 1 + Math.min(poids / 1000, 0.5) + Math.min(volume / 10, 0.2);
     setEstimate((e) => ({ ...e, fret: Math.round(base * coef) }));
-    setStep(3);
+    setStep(2);
   };
 
   return (
@@ -189,9 +189,9 @@ export default function CalculTarif() {
         {/* Stepper */}
         <div className="mt-2 flex flex-wrap gap-3">
           <StepPill index={1} title="Détails de l’expédition" active={step === 1} done={step > 1} />
-          <StepPill index={2} title="Paramètres & options" active={step === 2} done={step > 2} />
-          <StepPill index={3} title="Estimation & Résumé" active={step === 3} />
-          <div className="ml-auto text-xs text-gray-500">Étape {step} sur 3</div>
+{  /*        <StepPill index={2} title="Paramètres & options" active={step === 2} done={step > 2} />    */}
+          <StepPill index={2} title="Estimation & Résumé" active={step === 2} />
+          <div className="ml-auto text-xs text-gray-500">Étape {step} sur 2</div>
         </div>
 
         {/* CONTENT */}
@@ -243,7 +243,7 @@ export default function CalculTarif() {
           )}
 
           {/* STEP 2 */}
-          {step === 2 && (
+{   /*       {step === 2 && (
             <Section
               title="Paramètres & options"
               subtitle="Affiner l’estimation avec vos préférences de service."
@@ -286,10 +286,10 @@ export default function CalculTarif() {
                 </div>
               </div>
             </Section>
-          )}
+          )}  */}
 
           {/* STEP 3 */}
-          {step === 3 && (
+          {step === 2 && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <Section title="Estimation des coûts">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">

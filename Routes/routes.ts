@@ -41,10 +41,10 @@ export async function routes(app: Express): Promise<Server> {
 
   //Documents
   // 2️⃣ Télécharger un fichier
-  app.post("/upload/:shipmentId", upload.array("files", 5), saveDoc);
-  app.get("/download/:id", getfile);
-  app.get("/preview/:id", displayDoc);
-  app.post("/upload", documentUpload.single("file"), uploadTemp);
+  app.post("/api/upload/:shipmentId", upload.array("files", 5), saveDoc);
+  app.get("/api/download/:id", getfile);
+  app.get("/api/preview/:id", displayDoc);
+  app.post("/api/upload", documentUpload.single("file"), uploadTemp);
 
   // Crée et retourne le serveur HTTP
   const server = createServer(app);

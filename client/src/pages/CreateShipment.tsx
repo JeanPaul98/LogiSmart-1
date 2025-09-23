@@ -519,29 +519,70 @@ export default function CreateShipment() {
             </Section>
           )}
 
-          {step === 3 && (
-            <Section title="Documents & conformité">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Field label="Documents fournis">
-                <Input value={details.docsProvided} onChange={(e) => setDetails({ ...details, docsProvided: e.target.value })} />
-              </Field>
-              <Field label="Documents manquants">
-                <Input value={details.docsMissing} onChange={(e) => setDetails({ ...details, docsMissing: e.target.value })} />
-              </Field>
-              <Field label="Licences/Autorisations">
-                <Input value={details.licenses} onChange={(e) => setDetails({ ...details, licenses: e.target.value as any })} />
-              </Field>
-              <Field label="Inspection requise">
-                <Input value={details.inspection} onChange={(e) => setDetails({ ...details, inspection: e.target.value as any })} />
-              </Field>
-            </div>
-          </Section>
-          )}
+            {step === 3 && (
+              <Section title="Documents & conformité">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  
+                  {/* Documents fournis (fictifs) */}
+                  <Field label="Documents fournis">
+                    <Input
+                      value="Facture commerciale, Bon de livraison"
+                      onChange={(e) => setDetails({ ...details, docsProvided: e.target.value })}
+                    />
+                  </Field>
+
+                  {/* Documents manquants (fictifs) */}
+                  <Field label="Documents manquants">
+                    <Input
+                      value="Certificat d'origine"
+                      onChange={(e) => setDetails({ ...details, docsMissing: e.target.value })}
+                    />
+                  </Field>
+
+                  {/* Licences / Autorisations */}
+                  <Field label="Inspection requise">
+                    <Input
+                      value="Oui" // au lieu de "Inspection phytosanitaire"
+                      onChange={(e) => setDetails({ ...details, inspection: e.target.value as "Oui" | "Non" | "Oui / Non" })}
+                    />
+                  </Field>
+
+
+                  {/* Inspection requise */}
+                  <Field label="Inspection requise">
+                    <Input
+                      value="Oui" // au lieu de "Inspection phytosanitaire"
+                      onChange={(e) => setDetails({ ...details, inspection: e.target.value as "Oui" | "Non" | "Oui / Non" })}
+                    />
+                  </Field>
+                </div>
+
+                {/* Aperçu des fichiers (fictifs) */}
+                <div className="mt-4">
+                  <h4 className="text-sm font-semibold text-gray-700 mb-2">Fichiers associés (exemple)</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {[
+                      { name: "facture.pdf", size: "120 KB" },
+                      { name: "bon_livraison.docx", size: "85 KB" },
+                      { name: "photo_colis.png", size: "350 KB" },
+                    ].map((file, idx) => (
+                      <div key={idx} className="flex items-center gap-2 p-2 border rounded-lg bg-white shadow-sm">
+                        <div className="text-gray-600 text-sm truncate">{file.name}</div>
+                        <div className="ml-auto text-xs text-gray-400">{file.size}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </Section>
+            )}
+
+
 
           {step === 4 && (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+              {/* Partie gauche : sélection des services */}
               <div className="lg:col-span-2 space-y-5">
-                <Section title="Sélection des services">
+{ /*               <Section title="Sélection des services">
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                     <button
                       type="button"
@@ -550,183 +591,86 @@ export default function CreateShipment() {
                     >
                       Express / Économique / Fret
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => setServices({ ...services, insuranceDeclared: !services.insuranceDeclared })}
-                      className={`px-3 py-2 rounded-lg border text-sm ${services.insuranceDeclared ? "border-blue-600 text-blue-700 bg-blue-50" : "border-gray-300 text-gray-700 bg-white hover:bg-gray-50"}`}
-                    >
-                      Assurer l’envoi (valeur déclarée)
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setServices({ ...services, customsIncluded: !services.customsIncluded })}
-                      className={`px-3 py-2 rounded-lg border text-sm ${services.customsIncluded ? "border-blue-600 text-blue-700 bg-blue-50" : "border-gray-300 text-gray-700 bg-white hover:bg-gray-50"}`}
-                    >
-                      Inclure le service de dédouanement
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setServices({ ...services, delivery: services.delivery === "Domicile" ? "Point relais" : "Domicile" })}
-                      className="px-3 py-2 rounded-lg border text-sm border-gray-300 text-gray-700 bg-white hover:bg-gray-50"
-                    >
-                      À domicile / Point relais
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setServices({ ...services, pickupSchedule: "Programmer un enlèvement" })}
-                      className="px-3 py-2 rounded-lg border text-sm border-gray-300 text-gray-700 bg-white hover:bg-gray-50"
-                    >
-                      Programmer un enlèvement
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setServices({ ...services, packagingPro: !services.packagingPro })}
-                      className={`px-3 py-2 rounded-lg border text-sm ${services.packagingPro ? "border-blue-600 text-blue-700 bg-blue-50" : "border-gray-300 text-gray-700 bg-white hover:bg-gray-50"}`}
-                    >
-                      Ajouter emballage professionnel
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setServices({ ...services, notifyEmailSms: !services.notifyEmailSms })}
-                      className={`px-3 py-2 rounded-lg border text-sm ${services.notifyEmailSms ? "border-blue-600 text-blue-700 bg-blue-50" : "border-gray-300 text-gray-700 bg-white hover:bg-gray-50"}`}
-                    >
-                      Email + SMS au destinataire
-                    </button>
                   </div>
+                </Section> */}
 
-                  <div className="mt-4">
-                    <div className="text-sm font-medium text-gray-900 mb-3">Options additionnelles</div>
-                    <div className="flex flex-wrap gap-3 text-sm">
-                      {[
-                        { key: "pod", label: "Preuve de livraison (POD)" },
-                        { key: "signature", label: "Signature requise" },
-                        { key: "priority", label: "Priorité traitement" },
-                      ].map((opt) => {
-                        const checked = (services.options as any)[opt.key];
-                        return (
-                          <button
-                            key={opt.key}
-                            type="button"
-                            onClick={() => setServices({ ...services, options: { ...services.options, [opt.key]: !checked } })}
-                            className={`px-3 py-2 rounded-full border ${checked ? "border-blue-600 text-blue-700 bg-blue-50" : "border-gray-300 text-gray-700 bg-white hover:bg-gray-50"}`}
-                          >
-                            {opt.label}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </Section>
-
-                <Section title="Conditions & Validation">
+                {/* Résumé de l'expédition */}
+                <Section title="Résumé de l'expédition">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Field label="Notes au transporteur">
-                      <Input placeholder="Ex: Appeler avant la livraison" value={services.carrierNotes || ""} onChange={(e) => setServices({ ...services, carrierNotes: e.target.value })} />
-                    </Field>
-                    <Field label="Références client">
-                      <Input placeholder="PO-4589 / Projet Alpha" value={services.clientRef || ""} onChange={(e) => setServices({ ...services, clientRef: e.target.value })} />
-                    </Field>
-                    <Field label="Conditions générales">
-                      <Input value={services.acceptTerms ? "J'accepte les CGV et la politique douanière" : ""} onChange={() => setServices({ ...services, acceptTerms: !services.acceptTerms })} placeholder="J'accepte les CGV et la politique douanière" />
-                    </Field>
-                    <Field label="Méthode de paiement">
-                      <Input value={services.paymentMethod} onChange={(e) => setServices({ ...services, paymentMethod: e.target.value as any })} />
-                    </Field>
+                    {/* Expéditeur */}
+                    <div className="p-4 border rounded-lg shadow-sm bg-white">
+                      <h4 className="font-semibold text-gray-700 mb-2">Expéditeur</h4>
+                      <p><span className="font-medium">Nom :</span> Jean Paul Adzonyo</p>
+                      <p><span className="font-medium">Email :</span> jeanpaul@example.com</p>
+                      <p><span className="font-medium">Adresse :</span> 123 Rue Principale, Lomé, Togo</p>
+                    </div>
+
+                    {/* Destinataire */}
+                    <div className="p-4 border rounded-lg shadow-sm bg-white">
+                      <h4 className="font-semibold text-gray-700 mb-2">Destinataire</h4>
+                      <p><span className="font-medium">Nom :</span> Marie Dupont</p>
+                      <p><span className="font-medium">Email :</span> marie.dupont@example.com</p>
+                      <p><span className="font-medium">Adresse :</span> 456 Avenue Centrale, Paris, France</p>
+                    </div>
+
+                    {/* Détails de l'expédition */}
+                    <div className="p-4 border rounded-lg shadow-sm bg-white md:col-span-2">
+                      <h4 className="font-semibold text-gray-700 mb-2">Détails de l'expédition</h4>
+                      <div className="grid grid-cols-2 gap-2">
+                        <p><span className="font-medium">Colis :</span> 2</p>
+                        <p><span className="font-medium">Poids :</span> 5 kg</p>
+                        <p><span className="font-medium">Volume :</span> 0.02 m³</p>
+                        <p><span className="font-medium">Valeur déclarée :</span> 120 USD</p>
+                        <p><span className="font-medium">HS Code :</span> 490199</p>
+                      </div>
+                    </div>
+
+                    {/* Services et options */}
+{  /*                  <div className="p-4 border rounded-lg shadow-sm bg-white md:col-span-2">
+                      <h4 className="font-semibold text-gray-700 mb-2">Services & options</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {["Express", "Assurance", "Dédouanement", "POD", "Signature", "Priorité traitement"].map((service) => (
+                          <span key={service} className="px-2 py-1 bg-blue-50 text-blue-700 rounded-full text-sm font-medium">{service}</span>
+                        ))}
+                      </div>
+                      <p className="mt-2"><span className="font-medium">Livraison :</span> À domicile</p>
+                      <p><span className="font-medium">Enlèvement :</span> Programmé</p>
+                      <p><span className="font-medium">Emballage pro :</span> Oui</p>
+                      <p><span className="font-medium">Notifications :</span> Email + SMS</p>
+                    </div> */}
+
+                    {/* Notes et références */}
+                    <div className="p-4 border rounded-lg shadow-sm bg-white md:col-span-2">
+                      <h4 className="font-semibold text-gray-700 mb-2">Notes & références</h4>
+                      <p><span className="font-medium">Notes transporteur :</span> Appeler avant la livraison</p>
+                      <p><span className="font-medium">Références client :</span> PO-4589 / Projet Alpha</p>
+                      <p><span className="font-medium">CGV acceptées :</span> Oui</p>
+                      <p><span className="font-medium">Méthode de paiement :</span> Carte bancaire</p>
+                    </div>
                   </div>
                 </Section>
               </div>
 
+              {/* Partie droite : récapitulatif des coûts */}
               <div className="space-y-5">
                 <RecapCompact />
 
-                <Section title="Devis estimatif" className="space-y-3">
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-center">
-                    <Label>Transport</Label>
-                    <Input
-                      type="number"
-                      value={services.estimate.transport}
-                      onChange={(e) =>
-                        setServices({ ...services, estimate: { ...services.estimate, transport: Number(e.target.value || 0) } })
-                      }
-                    />
-                    <div className="flex gap-2">
-                      <Input
-                        value={services.estimate.transportUnit}
-                        onChange={(e) => setServices({ ...services, estimate: { ...services.estimate, transportUnit: e.target.value as any } })}
-                      />
-                      <Input
-                        value={services.estimate.transportTax}
-                        onChange={(e) => setServices({ ...services, estimate: { ...services.estimate, transportTax: e.target.value as any } })}
-                      />
-                    </div>
-
-                    <Label>Dédouanement</Label>
-                    <Input
-                      type="number"
-                      value={services.estimate.customs}
-                      onChange={(e) =>
-                        setServices({ ...services, estimate: { ...services.estimate, customs: Number(e.target.value || 0) } })
-                      }
-                    />
-                    <div className="flex gap-2">
-                      <Input
-                        value={services.estimate.customsUnit}
-                        onChange={(e) => setServices({ ...services, estimate: { ...services.estimate, customsUnit: e.target.value as any } })}
-                      />
-                      <Input
-                        value={services.estimate.customsTax}
-                        onChange={(e) => setServices({ ...services, estimate: { ...services.estimate, customsTax: e.target.value as any } })}
-                      />
-                    </div>
-
-                    <Label>Assurance</Label>
-                    <Input
-                      type="number"
-                      value={services.estimate.insurance}
-                      onChange={(e) =>
-                        setServices({ ...services, estimate: { ...services.estimate, insurance: Number(e.target.value || 0) } })
-                      }
-                    />
-                    <div className="flex gap-2">
-                      <Input
-                        value={services.estimate.insuranceUnit}
-                        onChange={(e) => setServices({ ...services, estimate: { ...services.estimate, insuranceUnit: e.target.value as any } })}
-                      />
-                      <Input
-                        value={services.estimate.insuranceTax}
-                        onChange={(e) => setServices({ ...services, estimate: { ...services.estimate, insuranceTax: e.target.value as any } })}
-                      />
-                    </div>
-
-                    <Label>Taxes & droits (estim.)</Label>
-                    <Input
-                      type="number"
-                      value={services.estimate.taxes}
-                      onChange={(e) =>
-                        setServices({ ...services, estimate: { ...services.estimate, taxes: Number(e.target.value || 0) } })
-                      }
-                    />
-                    <div className="flex gap-2">
-                      <Input
-                        value={services.estimate.taxesUnit}
-                        onChange={(e) => setServices({ ...services, estimate: { ...services.estimate, taxesUnit: e.target.value as any } })}
-                      />
-                      <Input
-                        value={services.estimate.taxesTax}
-                        onChange={(e) => setServices({ ...services, estimate: { ...services.estimate, taxesTax: e.target.value as any } })}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="text-sm text-gray-700 mt-2">
-                    <span className="font-medium">HT&nbsp;:</span> {totals.ht} USD &nbsp;&nbsp;
-                    <span className="font-medium">TTC estimé&nbsp;:</span> {totals.ttc} USD &nbsp;&nbsp;
-                    <span className="font-medium">Délai&nbsp;:</span> {totals.delay}
+                <Section title="Devis estimatif" className="space-y-3 text-sm text-gray-700">
+                  <div className="flex justify-between"><div>Transport</div><div>50 USD</div></div>
+                  <div className="flex justify-between"><div>Dédouanement</div><div>20 USD</div></div>
+                  <div className="flex justify-between"><div>Assurance</div><div>10 USD</div></div>
+                  <div className="flex justify-between"><div>Taxes & droits</div><div>15 USD</div></div>
+                  <div className="mt-2">
+                    <div><span className="font-medium">Total HT :</span> 95 USD</div>
+                    <div><span className="font-medium">TTC estimé :</span> 105 USD</div>
+                    <div><span className="font-medium">Délai :</span> 2-3 jours</div>
                   </div>
                 </Section>
               </div>
             </div>
           )}
+
+
         </div>
 
         {/* Footer actions : stack en mobile */}

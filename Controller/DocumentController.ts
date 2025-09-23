@@ -28,7 +28,7 @@ export const saveDoc = async (req: any, res:Response) => {
 export const uploadTemp = async (req:any, res:Response) => {
     try {
       if (!req.file) return res.status(400).json({ error: "No file uploaded" });
-      const savedDoc = await documentService.saveTemporary(req.file);
+      const savedDoc = await documentService.uploadTemporaryDocument(req.file);
       res.json(savedDoc);
     } catch (err) {
       console.error(err);
