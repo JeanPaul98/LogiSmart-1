@@ -106,6 +106,13 @@ export class Shipment {
     type: "decimal",
     precision: 10,
     scale: 2,
+  })
+  nbColis!: number | null;
+
+  @Column({
+    type: "decimal",
+    precision: 10,
+    scale: 2,
     transformer: decimalToNumber,
   })
   value!: number;
@@ -123,10 +130,11 @@ export class Shipment {
   originCity!: string;
 
   @Column({ type: "varchar", length: 255 })
+  sensTransi!: string;
+
+  @Column({ type: "varchar", length: 255 })
   destinationCity!: string;
 
-  @Column({ type: "datetime", nullable: true })
-  estimatedDelivery!: Date | null;
 
   @Column({
     type: "enum",
@@ -143,6 +151,9 @@ export class Shipment {
     transformer: decimalToNumber,
   })
   totalCost!: number | null;
+
+  @CreateDateColumn({ type: "datetime" })
+  enlevDate!: Date;
 
   @Column({
     type: "decimal",

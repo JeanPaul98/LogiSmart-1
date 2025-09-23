@@ -1,8 +1,11 @@
 // src/server/Services/ShipmentService.ts
 import { AppDataSource } from "../dbContext/db";                    // ⬅️ assure le bon chemin
 import { Shipment as ShipmentEntity } from "../Models/Shipment"; // ⬅️ entité TypeORM
-import type { InsertShipment, Shipment } from "@shared/schema";
+import type { InsertShipmentWithDocs, Shipment } from "@shared/schema";
 import { IShipment } from "../Interface/IShipment";
+import { Document } from "../Models/Document";
+import { In } from "typeorm";
+import { ShipmentDTO } from "../DTO/ShipmentDTO";
 
 // helper conversion
 const toNum = (v: number | string) => {
@@ -19,18 +22,41 @@ const genTracking = () =>
 
 export class ShipmentService implements IShipment {
   private repo = AppDataSource.getRepository(ShipmentEntity);
-
-  async createShipment(shipmentData: InsertShipment): Promise<Shipment> {
+  private docRepo = AppDataSource.getRepository(Document);
+  
+  async createShipment(shipmentData: InsertShipmentWithDocs): Promise<ShipmentDTO> {
     const trackingNumber = genTracking();
+  
+    // 1️⃣ Créer l’expédition
     const entity = this.repo.create({
       ...shipmentData,
       trackingNumber,
-      status: (shipmentData as any).status ?? "draft",
+      status: shipmentData.status ?? "draft",
     });
     const saved = await this.repo.save(entity);
-    return saved as unknown as Shipment;
+  
+    let docs: Document[] = [];
+    if (shipmentData.documentIds && shipmentData.documentIds.length > 0) {
+      docs = await this.docRepo.findBy({
+        id: In(shipmentData.documentIds),
+        shipmentId: undefined, // récupère uniquement les temporaires
+      });
+  
+      for (const doc of docs) {
+        doc.shipmentId = saved.id;
+      }
+      await this.docRepo.save(docs);
+    }
+  
+    const shipmentDTO: ShipmentDTO = {
+      ...saved,
+      documents: docs,
+      documentIds: docs.map((d) => d.id),
+    };
+  
+    return shipmentDTO;
   }
-
+  
   async getShipment(id: string | number): Promise<Shipment | undefined> {
     const row = await this.repo.findOne({ where: { id: toNum(id) } });
     return (row ?? undefined) as unknown as Shipment | undefined;
@@ -49,14 +75,6 @@ export class ShipmentService implements IShipment {
     return rows as unknown as Shipment[];
   }
 
-  async updateShipment(id: string | number, updates: Partial<Shipment>): Promise<Shipment> {
-    const numericId = toNum(id);
-    const existing = await this.repo.findOne({ where: { id: numericId } });
-    if (!existing) throw new Error("Shipment not found");
-    const merged = this.repo.merge(existing, updates);
-    const saved = await this.repo.save(merged);
-    return saved as unknown as Shipment;
-  }
 }
 
 export const shipment = new ShipmentService();

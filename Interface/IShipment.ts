@@ -2,8 +2,11 @@
 import {
     type InsertShipment,
     type Shipment,
+    type InsertShipmentWithDocs,
     type InsertTrackingEvent,
   } from "@shared/schema";
+
+  import { ShipmentDTO } from "../DTO/ShipmentDTO";
   
   /**
    * Contrat de persistance pour l’application.
@@ -11,11 +14,10 @@ import {
    */
   export interface IShipment {
     // Shipments
-    createShipment(shipment: InsertShipment): Promise<Shipment>;
+    createShipment(shipmentData: InsertShipmentWithDocs): Promise<ShipmentDTO>
     getShipment(id: string | number): Promise<Shipment | undefined>;
     getShipmentByTracking(trackingNumber: string): Promise<Shipment | undefined>;
     getUserShipments(userId: string): Promise<Shipment[]>;
-    updateShipment(id: string | number, updates: Partial<Shipment>): Promise<Shipment>;
 
   }
   

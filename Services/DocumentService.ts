@@ -1,66 +1,55 @@
-// src/server/storage.typeorm.document.ts
-import { AppDataSource } from "../dbContext/db";
-import { Document as DocumentEntity } from "../Models/Document";
-import type { InsertDocument, Document as DocumentDTO } from "@shared/schema";
-import { IDocument } from "../Interface/IDocument";
+import { Document } from "../Models/Document";
+import { AppDataSource } from "../dbContext/db"; 
+import fs from "fs";
+import * as path from "path";
+export class DocumentService {
 
-// helper: convertir proprement vers number
-const toNum = (v: number | string) => {
-  const n = typeof v === "number" ? v : Number(v);
-  if (Number.isNaN(n)) throw new Error(`Invalid numeric id: ${v}`);
-  return n;
-};
+    private repo = AppDataSource.getRepository(Document)
 
-/**
- * Service TypeORM pour la gestion des documents rattachés aux shipments.
- * Implémente l’interface IDocument.
- */
-export class DocumentService implements IDocument {
-  private repo = AppDataSource.getRepository(DocumentEntity);
 
-  /**
-   * Crée un nouveau document lié à un shipment existant.
-   *
-   * Métier :
-   * - Chaque document correspond à une pièce jointe logistique
-   *   (ex. facture, packing list, bill of lading).
-   * - On rattache obligatoirement ce document à un `shipmentId`.
-   * - Permet de centraliser la traçabilité documentaire pour un envoi.
-   *
-   * Cas d’usage :
-   * - Lorsqu’un utilisateur ou un agent ajoute un justificatif
-   *   à un envoi (PDF, image, etc.).
-   */
-  async addDocument(input: InsertDocument): Promise<DocumentDTO> {
-    const payload = {
-      ...input,
-      shipmentId: toNum(input.shipmentId as unknown as number | string),
-    };
-
-    const entity = this.repo.create(payload);
-    const saved = await this.repo.save(entity);
-    return saved as unknown as DocumentDTO;
+  // 1️⃣ Enregistrer un document après upload
+  async saveDocument(file: Express.Multer.File, shipmentId: number) {
+    const newDoc = this.repo.create({
+      type: path.extname(file.originalname).replace(".", "").toUpperCase(),
+      filename: file.originalname,
+      url: `/uploads/documents/${file.filename}`,
+      shipmentId,
+    });
+    return await this.repo.save(newDoc);
   }
 
-  /**
-   * Récupère tous les documents liés à un shipment.
-   *
-   * Métier :
-   * - Permet de visualiser l’historique documentaire associé à un envoi.
-   * - Les documents sont triés par `createdAt` décroissant
-   *   → les plus récents apparaissent en premier.
-   *
-   * Cas d’usage :
-   * - Afficher la liste des documents dans le suivi d’un colis.
-   * - Vérifier qu’un envoi contient bien tous les justificatifs requis.
-   */
-  async getShipmentDocuments(shipmentId: number | string): Promise<DocumentDTO[]> {
-    const rows = await this.repo.find({
-      where: { shipmentId: toNum(shipmentId) },
-      order: { createdAt: "DESC" },
+  //Service Document pour enregistrer un document temporaire
+  async uploadTemporaryDocument(file: Express.Multer.File): Promise<Document> {
+    const doc = this.repo.create({
+      type: path.extname(file.originalname).replace('.', '').toUpperCase(),
+      filename: file.originalname,
+      url: `/uploads/documents/${file.filename}`,
+      shipmentId: null, // pas encore lié à un shipment
     });
-    return rows as unknown as DocumentDTO[];
+  
+    return await this.repo.save(doc);
+  }
+  
+
+  // 2️⃣ Télécharger un fichier
+  async downloadDocument(documentId: number, res: any) {
+    const doc = await this.repo.findOneBy({ id: documentId });
+    if (!doc) throw new Error("Document introuvable");
+
+    const filePath = path.join(__dirname, "../../uploads/documents", path.basename(doc.url));
+    if (!fs.existsSync(filePath)) throw new Error("Fichier manquant sur le serveur");
+
+    return res.download(filePath, doc.filename);
+  }
+
+  // 3️⃣ Visualiser (ouvrir directement dans le navigateur)
+  async previewDocument(documentId: number, res: any) {
+    const doc = await this.repo.findOneBy({ id: documentId });
+    if (!doc) throw new Error("Document introuvable");
+
+    const filePath = path.join(__dirname, "../../uploads/documents", path.basename(doc.url));
+    if (!fs.existsSync(filePath)) throw new Error("Fichier manquant sur le serveur");
+
+    return res.sendFile(filePath);
   }
 }
-
-export const document = new DocumentService();

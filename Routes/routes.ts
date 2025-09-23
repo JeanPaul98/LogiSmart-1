@@ -6,10 +6,14 @@ import { createShipments, getShipments, getShipmentById } from "../Controller/Ch
 import { create, search } from "../Controller/HsCodesController"
 import { createTrackingEvent, getShipmentTracking, getShipmentByTrackingNumber} from "../Controller/TrackingController"
 import { createUser, getUserById } from "../Controller/UserController"
+import { getfile,displayDoc, saveDoc, uploadTemp} from "../Controller/DocumentController"
+import {storage, documentUpload} from "../shared/Utils";
+import multer from "multer";
 
 
 export async function routes(app: Express): Promise<Server> {
 
+  const upload = multer({ storage });
   // User
   app.post('/api/user/create', createUser);
   app.get('/api/user/:id', getUserById);
@@ -34,6 +38,13 @@ export async function routes(app: Express): Promise<Server> {
   app.post("/api/shipment/:shipmentId/tracking", createTrackingEvent);
   app.get("/api/shipment/:shipmentId/tracking", getShipmentTracking);
   app.get("/api/shipment/tracking/:trackingNumber", getShipmentByTrackingNumber);
+
+  //Documents
+  // 2️⃣ Télécharger un fichier
+  app.post("/upload/:shipmentId", upload.array("files", 5), saveDoc);
+  app.get("/download/:id", getfile);
+  app.get("/preview/:id", displayDoc);
+  app.post("/upload", documentUpload.single("file"), uploadTemp);
 
   // Crée et retourne le serveur HTTP
   const server = createServer(app);

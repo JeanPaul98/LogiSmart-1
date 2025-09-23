@@ -5,7 +5,6 @@ import React, { useMemo, useState } from "react";
 // Types (inchangés)
 // -----------------------------
 type Party = {
-  company: string;
   contact: string;
   email: string;
   phone: string;
@@ -164,7 +163,6 @@ export default function CreateShipment() {
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
 
   const [sender, setSender] = useState<Party>({
-    company: "Entreprise A",
     contact: "",
     email: "expediteur@example.com",
     phone: "+221 77 000 00 00",
@@ -175,7 +173,6 @@ export default function CreateShipment() {
   });
 
   const [receiver, setReceiver] = useState<Party>({
-    company: "Entreprise B",
     contact: "",
     email: "destinataire@example.com",
     phone: "+225 07 000 00 00",
@@ -264,9 +261,9 @@ export default function CreateShipment() {
   const RecapCompact = () => (
     <div className="text-right bg-white border border-gray-200 rounded-xl p-4 sm:p-5">
       <div className="text-sm text-gray-500">Expéditeur</div>
-      <div className="font-semibold text-gray-900 truncate">{sender.company}, {sender.cityZip.split("•")[0]}</div>
+      <div className="font-semibold text-gray-900 truncate">{sender.contact}, {sender.cityZip.split("•")[0]}</div>
       <div className="mt-3 text-sm text-gray-500">Destinataire</div>
-      <div className="font-semibold text-gray-900 truncate">{receiver.company}, {receiver.cityZip.split("•")[0]}</div>
+      <div className="font-semibold text-gray-900 truncate">{receiver.contact}, {receiver.cityZip.split("•")[0]}</div>
       <div className="border-t my-4" />
       <div className="space-y-1 text-sm">
         <div><span className="text-gray-500">Colis </span><span className="font-semibold">{parcels.count.replace("Ex:","").trim() || "3"}</span></div>
@@ -286,8 +283,8 @@ export default function CreateShipment() {
         {/* Stepper : scrollable en mobile */}
         <div className="mt-4 flex items-center gap-3 overflow-x-auto no-scrollbar pr-1">
           <StepPill index={1} title="Expéditeur & Destinataire" active={step === 1} done={step > 1} />
-          <StepPill index={2} title="Détails d’envoi" active={step === 2} done={step > 2} />
-          <StepPill index={3} title="Colis & Marchandises" active={step === 3} done={step > 3} />
+          <StepPill index={2} title="Détails d’envoi & Marchandises" active={step === 2} done={step > 2} />
+          <StepPill index={3} title="Document requis" active={step === 3} done={step > 3} />
           <StepPill index={4} title="Services & Résumé" active={step === 4} />
           <div className="ml-auto text-xs text-gray-500 shrink-0">Étape {step} sur 4</div>
         </div>
@@ -297,10 +294,7 @@ export default function CreateShipment() {
           {step === 1 && (
             <Section title="Informations expéditeur">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Field label="Nom / Entreprise">
-                  <Input value={sender.company} onChange={(e) => setSender({ ...sender, company: e.target.value })} />
-                </Field>
-                <Field label="Contact">
+                <Field label="Nom & Prénom">
                   <Input value={sender.contact} onChange={(e) => setSender({ ...sender, contact: e.target.value })} placeholder="Nom & Prénom" />
                 </Field>
                 <Field label="Email">
@@ -318,9 +312,9 @@ export default function CreateShipment() {
                 <Field label="Pays">
                   <Input value={sender.country} onChange={(e) => setSender({ ...sender, country: e.target.value })} />
                 </Field>
-                <Field label="Référence client (optionnel)">
+{               /*<Field label="Référence client (optionnel)">
                   <Input value={sender.ref || ""} onChange={(e) => setSender({ ...sender, ref: e.target.value })} placeholder="REF-EXP-001" />
-                </Field>
+                </Field>*/}
               </div>
             </Section>
           )}
@@ -328,10 +322,7 @@ export default function CreateShipment() {
           {step === 1 && (
             <Section title="Informations destinataire">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Field label="Nom / Entreprise">
-                  <Input value={receiver.company} onChange={(e) => setReceiver({ ...receiver, company: e.target.value })} />
-                </Field>
-                <Field label="Contact">
+                <Field label="Nom & Prénom">
                   <Input value={receiver.contact} onChange={(e) => setReceiver({ ...receiver, contact: e.target.value })} placeholder="Nom & Prénom" />
                 </Field>
                 <Field label="Email">
@@ -349,13 +340,13 @@ export default function CreateShipment() {
                 <Field label="Pays">
                   <Input value={receiver.country} onChange={(e) => setReceiver({ ...receiver, country: e.target.value })} />
                 </Field>
-                <Field label="Instructions de livraison (optionnel)">
+{               /* <Field label="Instructions de livraison (optionnel)">
                   <Input value={receiver.notes || ""} onChange={(e) => setReceiver({ ...receiver, notes: e.target.value })} placeholder="Ex: Point relais, horaires…" />
-                </Field>
+                </Field>*/}
               </div>
 
               {/* Récap rapide */}
-              <div className="mt-4 bg-gray-50 border border-gray-200 rounded-lg p-3 sm:p-4">
+            {/* <div className="mt-4 bg-gray-50 border border-gray-200 rounded-lg p-3 sm:p-4">
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-start gap-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
@@ -363,7 +354,7 @@ export default function CreateShipment() {
                         <span className="text-xs font-semibold text-pink-700">A</span>
                       </div>
                       <div className="min-w-0">
-                        <div className="text-sm font-semibold text-gray-900 truncate">{sender.company || "—"}</div>
+                        <div className="text-sm font-semibold text-gray-900 truncate">{sender.contact || "—"}</div>
                         <div className="text-xs text-gray-500 truncate">{sender.cityZip || sender.country}</div>
                       </div>
                     </div>
@@ -374,13 +365,13 @@ export default function CreateShipment() {
                         <span className="text-xs font-semibold text-blue-700">B</span>
                       </div>
                       <div className="min-w-0">
-                        <div className="text-sm font-semibold text-gray-900 truncate">{receiver.company || "—"}</div>
+                        <div className="text-sm font-semibold text-gray-900 truncate">{receiver.contact || "—"}</div>
                         <div className="text-xs text-gray-500 truncate">{receiver.cityZip || receiver.country}</div>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
+              </div> */}
             </Section>
           )}
 
@@ -389,9 +380,6 @@ export default function CreateShipment() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Field label="Mode de transport">
                   <Input value={details.transportMode} onChange={(e) => setDetails({ ...details, transportMode: e.target.value as any })} />
-                </Field>
-                <Field label="Incoterm">
-                  <Input value={details.incoterm} onChange={(e) => setDetails({ ...details, incoterm: e.target.value as any })} />
                 </Field>
                 <Field label="Sens">
                   <Input value={details.flow} onChange={(e) => setDetails({ ...details, flow: e.target.value as any })} />
@@ -403,49 +391,22 @@ export default function CreateShipment() {
                 <Field label="Assurance transport">
                   <Input value={details.insurance} onChange={(e) => setDetails({ ...details, insurance: e.target.value as any })} />
                 </Field>
-                <Field label="Type de paiement">
-                  <Input value={details.payment} onChange={(e) => setDetails({ ...details, payment: e.target.value as any })} />
-                </Field>
-
                 <Field label="Lieu d’enlèvement">
                   <Input placeholder="Ville, pays" value={details.pickupPlace} onChange={(e) => setDetails({ ...details, pickupPlace: e.target.value })} />
                 </Field>
                 <Field label="Lieu de livraison">
                   <Input placeholder="Ville, pays" value={details.deliveryPlace} onChange={(e) => setDetails({ ...details, deliveryPlace: e.target.value })} />
                 </Field>
-                <Field label="Référence client (optionnel)">
-                  <Input value={details.clientRef} onChange={(e) => setDetails({ ...details, clientRef: e.target.value })} />
-                </Field>
-
-                <Field label="Remarques" >
-                  <Input placeholder="Ex: Enlèvement en journée uniquement" value={details.remarks} onChange={(e) => setDetails({ ...details, remarks: e.target.value })} />
-                </Field>
               </div>
             </Section>
           )}
 
           {step === 2 && (
-            <Section title="Documents & conformité">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Field label="Documents fournis">
-                  <Input value={details.docsProvided} onChange={(e) => setDetails({ ...details, docsProvided: e.target.value })} />
-                </Field>
-                <Field label="Documents manquants">
-                  <Input value={details.docsMissing} onChange={(e) => setDetails({ ...details, docsMissing: e.target.value })} />
-                </Field>
-                <Field label="Licences/Autorisations">
-                  <Input value={details.licenses} onChange={(e) => setDetails({ ...details, licenses: e.target.value as any })} />
-                </Field>
-                <Field label="Inspection requise">
-                  <Input value={details.inspection} onChange={(e) => setDetails({ ...details, inspection: e.target.value as any })} />
-                </Field>
-              </div>
-            </Section>
-          )}
-
-          {step === 3 && (
             <Section title="Colis & Marchandises">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <Field label="Description des marchandises">
+                  <Input value={parcels.description} onChange={(e) => setParcels({ ...parcels, description: e.target.value })} />
+                </Field>
                 <Field label="Nombre de colis">
                   <Input value={parcels.count} onChange={(e) => setParcels({ ...parcels, count: e.target.value })} />
                 </Field>
@@ -462,25 +423,15 @@ export default function CreateShipment() {
                 <Field label="Code SH principal">
                   <Input value={parcels.mainHs} onChange={(e) => setParcels({ ...parcels, mainHs: e.target.value })} />
                 </Field>
+                <Field label="Matières dangereuses">
+                  <Input value={parcels.dangerous} onChange={(e) => setParcels({ ...parcels, dangerous: e.target.value as any })} />
+                </Field>
                 <Field label="">
                   <div className="text-xs text-gray-500">Besoin d’aide ? Utilisez la recherche de codes SH.</div>
                 </Field>
               </div>
-
-              <div className="mt-4 grid grid-cols-1 xl:grid-cols-2 gap-4">
-                <Field label="Description des marchandises">
-                  <Input value={parcels.description} onChange={(e) => setParcels({ ...parcels, description: e.target.value })} />
-                </Field>
-                <Field label="Matières dangereuses">
-                  <Input value={parcels.dangerous} onChange={(e) => setParcels({ ...parcels, dangerous: e.target.value as any })} />
-                </Field>
-                <Field label="Si oui, précisez la classe ADR/IATA et l’emballage.">
-                  <Input value={parcels.dangerousDetails} onChange={(e) => setParcels({ ...parcels, dangerousDetails: e.target.value })} />
-                </Field>
-              </div>
-
               {/* Lignes articles */}
-              <div className="mt-5 space-y-3">
+{             /* <div className="mt-5 space-y-3">
                 {parcels.lines.map((line, i) => (
                   <div key={i} className="grid grid-cols-1 sm:grid-cols-12 gap-3 bg-gray-50 border border-gray-200 rounded-lg p-3">
                     <div className="sm:col-span-2">
@@ -564,8 +515,27 @@ export default function CreateShipment() {
                 {parcels.lines.reduce((s, l) => s + l.qty, 0)} • Poids:{" "}
                 {parcels.lines.reduce((s, l) => s + l.weightKg * l.qty, 0).toFixed(1)} kg • Valeur:{" "}
                 {parcels.lines.reduce((s, l) => s + l.valueUsd * l.qty, 0)} USD
-              </div>
+              </div> */}
             </Section>
+          )}
+
+          {step === 3 && (
+            <Section title="Documents & conformité">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Field label="Documents fournis">
+                <Input value={details.docsProvided} onChange={(e) => setDetails({ ...details, docsProvided: e.target.value })} />
+              </Field>
+              <Field label="Documents manquants">
+                <Input value={details.docsMissing} onChange={(e) => setDetails({ ...details, docsMissing: e.target.value })} />
+              </Field>
+              <Field label="Licences/Autorisations">
+                <Input value={details.licenses} onChange={(e) => setDetails({ ...details, licenses: e.target.value as any })} />
+              </Field>
+              <Field label="Inspection requise">
+                <Input value={details.inspection} onChange={(e) => setDetails({ ...details, inspection: e.target.value as any })} />
+              </Field>
+            </div>
+          </Section>
           )}
 
           {step === 4 && (

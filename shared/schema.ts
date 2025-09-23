@@ -52,53 +52,80 @@ export const insertUserSchema = userSchema.omit({
 export type User = z.infer<typeof userSchema>;
 export type InsertUser = z.infer<typeof insertUserSchema> & { id?: string };
 
-/* ===========================
-  Shipments (id en int auto)
-  =========================== */
-export const shipmentSchema = z.object({
-  id: z.number().int().optional(),          // INT AUTO_INCREMENT
-  trackingNumber: z.string(),
-  userId: z.string().uuid().optional().nullable(),  // FK -> users.id (UUID)
 
-  senderName: z.string(),
-  senderEmail: z.string().email(),
-  senderAddress: z.string(),
-  senderPhone: z.string().optional().nullable(),
-
-  recipientName: z.string(),
-  recipientEmail: z.string().email(),
-  recipientAddress: z.string(),
-  recipientPhone: z.string().optional().nullable(),
-
-  description: z.string(),
-  weight: z.coerce.number(),
-  volume: z.coerce.number().optional().nullable(),
-  value: z.coerce.number(),
-  hsCode: z.string().optional().nullable(),
-
-  transportMode: transportModeEnum,
-  originCity: z.string(),
-  destinationCity: z.string(),
-  estimatedDelivery: z.coerce.date().optional().nullable(),
-
-  status: shipmentStatusEnum.default("draft"),
-  totalCost: z.coerce.number().optional().nullable(),
-  customsDuty: z.coerce.number().optional().nullable(),
-  vat: z.coerce.number().optional().nullable(),
-
-  createdAt: z.coerce.date().optional(),
-  updatedAt: z.coerce.date().optional(),
+export const documentSchema = z.object({
+  id: z.number().int().optional(),
+  type: z.string(),
+  filename: z.string(),
+  url: z.string().url(),
+  shipmentId: z.number().int().optional().nullable(), // FK optionnel
 });
 
-export const insertShipmentSchema = shipmentSchema.omit({
+export const insertDocumentSchema = documentSchema.omit({
   id: true,
-  trackingNumber: true,
-  createdAt: true,
-  updatedAt: true,
+  shipmentId: true, // tu ne le donnes pas au moment de la création
 });
-export type Shipment = z.infer<typeof shipmentSchema>;
-export type InsertShipment = z.infer<typeof insertShipmentSchema>;
 
+export type Document = z.infer<typeof documentSchema>;
+export type InsertDocument = z.infer<typeof insertDocumentSchema>;
+
+
+/* ===========================
+  Shipments
+  =========================== */
+  export const shipmentSchema = z.object({
+    id: z.number().int().optional(),
+    trackingNumber: z.string(),
+    userId: z.string().uuid().optional().nullable(),
+  
+    senderName: z.string(),
+    senderEmail: z.string().email(),
+    senderAddress: z.string(),
+    senderPhone: z.string().optional().nullable(),
+  
+    recipientName: z.string(),
+    recipientEmail: z.string().email(),
+    recipientAddress: z.string(),
+    recipientPhone: z.string().optional().nullable(),
+  
+    description: z.string(),
+    sensTransi: z.string(),
+    weight: z.coerce.number(),
+    volume: z.coerce.number().optional().nullable(),
+    value: z.coerce.number(),
+    nbColis: z.coerce.number(),
+    hsCode: z.string().optional().nullable(),
+    enlevDate: z.coerce.date().optional(),
+  
+    transportMode: transportModeEnum,
+    originCity: z.string(),
+    destinationCity: z.string(),
+  
+    status: shipmentStatusEnum.default("draft"),
+    totalCost: z.coerce.number().optional().nullable(),
+    customsDuty: z.coerce.number().optional().nullable(),
+    vat: z.coerce.number().optional().nullable(),
+  
+    createdAt: z.coerce.date().optional(),
+    updatedAt: z.coerce.date().optional(),
+  
+    // 🔗 Ajout des documents dans Shipment complet
+    documentIds: z.array(z.number().int()).optional().default([]),
+  });
+  
+  export const insertShipmentSchema = shipmentSchema.omit({
+    id: true,
+    trackingNumber: true,
+    createdAt: true,
+    updatedAt: true,
+  });
+  
+  export type Shipment = z.infer<typeof shipmentSchema>;
+  export type InsertShipment = z.infer<typeof insertShipmentSchema>;
+  export type InsertShipmentWithDocs = InsertShipment & {
+    documentIds?: number[]; // IDs des documents déjà uploadés
+  };
+  
 /* ===========================
   Tracking Events (id en int auto)
   =========================== */
@@ -120,27 +147,6 @@ export const insertTrackingEventSchema = trackingEventSchema.omit({
 });
 export type TrackingEvent = z.infer<typeof trackingEventSchema>;
 export type InsertTrackingEvent = z.infer<typeof insertTrackingEventSchema>;
-
-/* ===========================
-  Documents (id en int auto)
-  =========================== */
-export const documentSchema = z.object({
-  id: z.number().int().optional(),
-  shipmentId: z.coerce.number().int(),   // FK int
-  type: z.string(),
-  filename: z.string(),
-  url: z.string().url(),
-  createdAt: z.coerce.date().optional(),
-  updatedAt: z.coerce.date().optional().nullable(),
-});
-
-export const insertDocumentSchema = documentSchema.omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-export type Document = z.infer<typeof documentSchema>;
-export type InsertDocument = z.infer<typeof insertDocumentSchema>;
 
 /* ===========================
   HS Codes (id en int auto)

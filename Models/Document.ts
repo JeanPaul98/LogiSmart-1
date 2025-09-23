@@ -15,9 +15,9 @@ export class Document {
   @PrimaryGeneratedColumn({ type: "int", unsigned: true })
   id!: number;
 
-  @Column({ type: "int", unsigned: true })
-  shipmentId!: number;
-
+  @Column({ type: "int", unsigned: true, nullable: true })
+  shipmentId!: number | null;
+  
   @ManyToOne(() => Shipment, (shipment) => shipment.documents, {
     onDelete: "CASCADE",
     onUpdate: "CASCADE",
