@@ -11,7 +11,6 @@ export type TariffInput = {
   weight: number;
   volume?: number;
   declaredValue: number;
-  hsCode?: string;
   incoterm?: string;
   cargoType?: "general" | "dangerous" | "perishable" | "fragile";
   insurance?: boolean;
@@ -48,7 +47,6 @@ export const calculateTariffForShipment = async (shipmentId: number) => {
     weight: shipment.weight,
     volume: shipment.volume ?? undefined,
     declaredValue: shipment.value,
-    hsCode: shipment.hsCode ?? undefined,
     insurance: true,
     serviceType: "standard",
   });
@@ -96,16 +94,13 @@ const calculateTariff = (input: TariffInput): TariffOutput => {
   // Assurance
   const insuranceCost = input.insurance ? input.declaredValue * 0.01 : 0;
 
-  // Customs Duty et VAT simplifiés
-  const customsDuty = input.hsCode ? input.declaredValue * 0.05 : 0;
-  const vat = input.hsCode ? input.declaredValue * 0.1 : 0;
 
   // Service type
   let serviceMultiplier = 1;
   if(input.serviceType === 'express') serviceMultiplier = 1.2;
   else if(input.serviceType === 'economy') serviceMultiplier = 0.9;
 
-  const totalCost = Math.round((baseCost * distanceFactor + insuranceCost + customsDuty + vat) * serviceMultiplier * 100) / 100;
+  const totalCost = Math.round((baseCost * distanceFactor + insuranceCost) * serviceMultiplier * 100) / 100;
 
   // Estimation delivery
   let estimatedDays = 0;
@@ -121,8 +116,6 @@ const calculateTariff = (input: TariffInput): TariffOutput => {
     distanceFactor,
     volumetricWeight,
     insuranceCost,
-    customsDuty,
-    vat,
     breakdown: { 
       chargeableWeight, 
       transportMode: input.transportMode, 
