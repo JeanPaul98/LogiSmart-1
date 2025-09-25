@@ -33,9 +33,7 @@ const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar }) => {
         </button>
 
         {/* Logo */}
-        <Link href="/dashboard" className="text-xl font-bold text-orange-600">
-          LogiSmart
-        </Link>
+{        <Link href="/dashboard" className="text-xl font-bold text-orange-600"></Link>}
 
         {/* Menu utilisateur */}
         <div className="relative" ref={menuRef}>
