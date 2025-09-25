@@ -31,24 +31,13 @@ export class User {
   password!: string;
 
   @Column({ type: "varchar", length: 512, nullable: true })
-  profileImageUrl!: string | null;
-
-  @Column({ type: "varchar", length: 512, nullable: true })
-  refreshToken!: string | null;
-
-  @Column({ type: "varchar", length: 10, default: "fr" })
-  preferredLanguage!: string;
+  refreshTokens!: string | null;
 
   @OneToMany(() => ChatSession, (session) => session.user)
   sessions!: ChatSession[];
 
-  // ⬇⬇ AJOUT du rôle (enum)
-  @Column({
-    type: "enum",
-    enum: ["user", "admin", "moderator"],
-    default: "user",
-  })
-  role!: "user" | "admin" | "moderator";
+  @Column({ type: "varchar", length: 255, nullable: true, default: "user" })
+  role!: string | null;
 
 
   @CreateDateColumn({ type: "datetime" })

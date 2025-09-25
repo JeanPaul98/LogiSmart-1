@@ -33,13 +33,8 @@ export type Session = z.infer<typeof sessionSchema>;
     password: z.string(),
     firstName: z.string().optional().nullable(),
     lastName: z.string().optional().nullable(),
-    profileImageUrl: z.string().url().optional().nullable(),
     phone: z.string().optional().nullable(),
-    preferredLanguage: z.string().default("fr"),
-  
-    // ⬇️ nouvel attribut
-    role: z.enum(["user", "admin", "moderator"]).default("user"),
-  
+    role: z.string().optional().nullable(),
     createdAt: z.coerce.date().optional(),
     updatedAt: z.coerce.date().optional(),
   });

@@ -11,7 +11,7 @@
     "Auth/replitAuth.ts",
     "Auth/AuthController/AuthController.ts",
     "Routes/routes.ts"
-  ],
+, "Auth"  ],
   "exclude": [
     "node_modules",
     "build",

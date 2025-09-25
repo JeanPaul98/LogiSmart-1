@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { calculShipment, estimationShipment } from "../Controller/CalculateController";
 import { alert } from "../Controller/AlertController"
+import { logout,oauthToken,register } from "../Controller/AuthController"
 import { createShipments, getShipments, getShipmentById } from "../Controller/ChipmentsController"
 import { create, search } from "../Controller/HsCodesController"
 import { createTrackingEvent, getShipmentTracking, getShipmentByTrackingNumber} from "../Controller/TrackingController"
@@ -45,6 +46,12 @@ export async function routes(app: Express): Promise<Server> {
   app.get("/api/download/:id", getfile);
   app.get("/api/preview/:id", displayDoc);
   app.post("/api/upload", documentUpload.single("file"), uploadTemp);
+
+  //Authentification
+  app.post("/api/auth/register", register);
+  app.post("/api/oauth/token", oauthToken);
+  app.post("/api/auth/logout", logout);
+
 
   // Crée et retourne le serveur HTTP
   const server = createServer(app);

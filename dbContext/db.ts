@@ -10,6 +10,7 @@ import { HSCode } from "../Models/HSCode";
 import { ChatSession } from "../Models/ChatSession";
 import { ChatMessage } from "../Models/ChatMessage";
 import { ShipmentTariff } from "../Models/ShipmentTCalcul";
+import { RefreshToken } from "../Models/RefreshToken";
 
 export const AppDataSource = new DataSource({
   type: "mysql",
@@ -19,7 +20,7 @@ export const AppDataSource = new DataSource({
   password: process.env.DB_PASSWORD || "root",
   database: process.env.DB_NAME || "logismart",
   // ajoutez vos entités ici
-  entities: [User, Shipment, TrackingEvent, Document, Alert, HSCode, ChatSession, ChatMessage, ShipmentTariff],
+  entities: [User, Shipment, TrackingEvent, Document,RefreshToken, Alert, HSCode, ChatSession, ChatMessage, ShipmentTariff],
   synchronize: true, // ✅ en prod: toujours false
   logging: process.env.NODE_ENV === "development",
 });
