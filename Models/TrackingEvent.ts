@@ -1,12 +1,6 @@
-// server/entities/TrackingEvent.ts
 import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  ManyToOne,
-  JoinColumn,
-  CreateDateColumn,
-  UpdateDateColumn,
+  Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn,
+  CreateDateColumn, UpdateDateColumn
 } from "typeorm";
 import { Shipment } from "./Shipment";
 
@@ -15,12 +9,13 @@ export class TrackingEvent {
   @PrimaryGeneratedColumn({ type: "int", unsigned: true })
   id!: number;
 
+  // Doit matcher EXACTEMENT Shipment.id (int unsigned)
   @Column({ type: "int", unsigned: true })
   shipmentId!: number;
 
   @ManyToOne(() => Shipment, (shipment) => shipment.trackingEvents, {
-    onDelete: "CASCADE",
-    onUpdate: "CASCADE",
+    onDelete: "CASCADE",   // optionnel mais conseillé
+    onUpdate: "CASCADE",   // optionnel
   })
   @JoinColumn({ name: "shipmentId" })
   shipment!: Shipment;

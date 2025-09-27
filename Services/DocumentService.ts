@@ -27,7 +27,19 @@ export class DocumentService {
       shipmentId: null, // pas encore lié à un shipment
     });
   
-    return await this.repo.save(doc);
+    const saved = await this.repo.save(doc);
+    return saved;
+    }
+
+  async attachToShipment(documentIds: number[], shipmentId: number) {
+    if (!documentIds?.length) return;
+
+    await this.repo
+      .createQueryBuilder()
+      .update(Document)
+      .set({ shipmentId })
+      .where("id IN (:...ids)", { ids: documentIds })
+      .execute();
   }
   
 

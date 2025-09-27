@@ -14,7 +14,6 @@ import {
    */
   export interface IShipment {
     // Shipments
-    createShipment(shipmentData: InsertShipmentWithDocs): Promise<ShipmentDTO>
     getShipment(id: string | number): Promise<Shipment | undefined>;
     getShipmentByTracking(trackingNumber: string): Promise<Shipment | undefined>;
     getUserShipments(userId: string): Promise<Shipment[]>;

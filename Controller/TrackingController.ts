@@ -1,6 +1,6 @@
 // src/server/controllers/tracking.controller.ts
 import type { Request, Response } from "express";
-import { tracking } from "../Services/TrackingService";
+import { trackingService } from "../Services/TrackingService";
 import { insertTrackingEventSchema } from "@shared/schema";
 
 /**
@@ -13,7 +13,7 @@ export const createTrackingEvent = async (req: Request, res: Response) => {
       shipmentId: req.params.shipmentId,
     });
 
-    const savedEvent = await tracking.addTrackingEvent(eventData);
+    const savedEvent = await trackingService.addTrackingEvent(eventData);
 
     res.status(201).json({
       success: true,
@@ -35,7 +35,7 @@ export const createTrackingEvent = async (req: Request, res: Response) => {
 export const getShipmentTracking = async (req: Request, res: Response) => {
   try {
     const shipmentId = req.params.shipmentId;
-    const trackingEvents = await tracking.getShipmentTracking(shipmentId);
+    const trackingEvents = await trackingService.getShipmentTracking(shipmentId);
 
     res.status(200).json({
       success: true,
@@ -57,7 +57,7 @@ export const getShipmentTracking = async (req: Request, res: Response) => {
 export const getShipmentByTrackingNumber = async (req: Request, res: Response) => {
   try {
     const trackingNumber = req.params.trackingNumber;
-    const shipment = await tracking.getShipmentByTracking(trackingNumber);
+    const shipment = await trackingService.getShipmentByTracking(trackingNumber);
 
     if (!shipment) {
       return res.status(404).json({

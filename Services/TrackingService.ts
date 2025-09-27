@@ -65,8 +65,8 @@ export class TrackingService implements ITracking {
   async getShipmentByTracking(trackingNumber: string): Promise<ShipmentDTO | null> {
     const repo = AppDataSource.getRepository(ShipmentEntity);
     const shipment = await repo.findOne({ where: { trackingNumber } });
-    return shipment ? (shipment as ShipmentDTO) : null;
+    return shipment as ShipmentDTO | null;
   }
 }
 
-export const tracking = new TrackingService();
+export const trackingService = new TrackingService();

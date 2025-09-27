@@ -5,15 +5,40 @@ import MainLayout from "@/components/layout/MainLayout";
 /* ===========================
    Types
 =========================== */
+export type ShipmentStatus =
+  | "registered"
+  | "confirmed"
+  | "in_transit"
+  | "customs_clearance"
+  | "delivered"
+  | "cancelled"
+  | "draft"
+  | string;
+
 type Shipment = {
   id: number;
   trackingNumber: string;
   senderAddress: string;
   recipientAddress: string;
-  status: "draft" | "confirmed" | "in_transit" | "customs_clearance" | "delivered" | "cancelled";
-  transportMode: "air" | "sea" | "road";
+  status: ShipmentStatus;
+  transportMode: string;
   createdAt: string;
   enlevDate?: string | null;
+};
+
+type ShipmentDetail = Shipment & {
+  senderName?: string;
+  senderEmail?: string;
+  senderPhone?: string;
+  recipientName?: string;
+  recipientEmail?: string;
+  recipientPhone?: string;
+  description?: string;
+  originCity?: string;
+  destinationCity?: string;
+  totalCost?: number;
+  customsDuty?: number | null;
+  vat?: number | null;
 };
 
 type TrackingEvent = {
@@ -25,11 +50,13 @@ type TrackingEvent = {
 /* ===========================
    Config
 =========================== */
-// Utilise une variable d'env si dispo, sinon localhost
 const API_BASE =
   (import.meta as any)?.env?.VITE_API_BASE_URL?.replace(/\/+$/, "") ||
   "http://localhost:5000";
+
 const LIST_URL = `${API_BASE}/api/shipments/list`;
+const GET_DETAIL_URL = (id: number) => `${API_BASE}/api/shipments/${id}`;
+const PATCH_STATUS_URL = (id: number) => `${API_BASE}/api/shipments/${id}/status`;
 const TRACKING_URL = (trackingNumber: string) =>
   `${API_BASE}/api/shipments/${encodeURIComponent(trackingNumber)}/events`;
 
@@ -57,20 +84,30 @@ const Badge = ({
   );
 };
 
-const statusToBadge = (s: Shipment["status"]) => {
+const statusToBadge = (raw: ShipmentStatus) => {
+  const s = (raw || "").toString().trim().toLowerCase();
+
   switch (s) {
-    case "in_transit":
-      return <Badge color="blue">En transit</Badge>;
+    case "registered":
+      return <Badge color="blue">Enregistré</Badge>;
     case "confirmed":
       return <Badge color="green">Confirmé</Badge>;
+    case "in_transit":
+    case "in-transit":
+      return <Badge color="blue">En transit</Badge>;
     case "customs_clearance":
+    case "customs-clearance":
       return <Badge color="amber">Douane</Badge>;
     case "delivered":
       return <Badge color="green">Livré</Badge>;
     case "cancelled":
+    case "canceled":
       return <Badge color="red">Annulé</Badge>;
-    default:
+    case "draft":
       return <Badge>Draft</Badge>;
+    default:
+      const label = raw ? raw.charAt(0).toUpperCase() + raw.slice(1) : "—";
+      return <Badge>{label}</Badge>;
   }
 };
 
@@ -79,6 +116,40 @@ const modeIcon = (m: Shipment["transportMode"]) => {
   if (m === "sea") return "🚢";
   return "🚚";
 };
+
+/* Simple modal */
+function Modal({
+  open,
+  onClose,
+  children,
+  title,
+}: {
+  open: boolean;
+  onClose: () => void;
+  children: React.ReactNode;
+  title?: string;
+}) {
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-50">
+      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+      <div className="absolute inset-0 flex items-center justify-center p-4">
+        <div className="w-full max-w-2xl rounded-xl bg-white shadow-lg border border-gray-200">
+          <div className="flex items-center justify-between px-4 py-3 border-b">
+            <h3 className="text-base font-semibold text-gray-900">{title || "Détails"}</h3>
+            <button
+              onClick={onClose}
+              className="rounded-md border px-2 py-1 text-xs hover:bg-gray-50"
+            >
+              Fermer
+            </button>
+          </div>
+          <div className="p-4">{children}</div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 /* ===========================
    Page
@@ -101,6 +172,22 @@ export default function CalculTarif() {
   // Auto-refresh optionnel (désactivé par défaut)
   const [autoRefresh, setAutoRefresh] = useState(false);
 
+  // Modal état
+  const [open, setOpen] = useState(false);
+  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [detail, setDetail] = useState<ShipmentDetail | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [detailErr, setDetailErr] = useState<string | null>(null);
+  const [newStatus, setNewStatus] = useState<ShipmentStatus>("confirmed");
+  const [savingStatus, setSavingStatus] = useState(false);
+
+  // Toast simple
+  const [toast, setToast] = useState<string | null>(null);
+  const showToast = (msg: string) => {
+    setToast(msg);
+    setTimeout(() => setToast(null), 2500);
+  };
+
   // Fetch liste d’expéditions
   useEffect(() => {
     const ac = new AbortController();
@@ -110,20 +197,17 @@ export default function CalculTarif() {
       try {
         const res = await fetch(LIST_URL, {
           signal: ac.signal,
-          headers: { "Accept": "application/json" },
+          headers: { Accept: "application/json" },
         });
-        if (!res.ok) {
-          throw new Error(`HTTP ${res.status}`);
-        }
-        // On tolère que l'API renvoie {data: Shipment[]} OU Shipment[]
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
-        const list: Shipment[] = Array.isArray(data) ? data : (data?.data ?? []);
+        const list: Shipment[] = Array.isArray(data) ? data : data?.data ?? [];
         if (!Array.isArray(list)) throw new Error("Réponse API invalide");
         setShipments(list);
       } catch (e: any) {
         if (e.name !== "AbortError") {
           setErr(e?.message || "Erreur réseau");
-          setShipments([]); // vide en cas d'erreur
+          setShipments([]);
         }
       } finally {
         setLoading(false);
@@ -131,7 +215,7 @@ export default function CalculTarif() {
     };
     run();
     return () => ac.abort();
-  }, []); // au montage
+  }, []);
 
   // Auto-refresh toutes les 60s si activé
   useEffect(() => {
@@ -141,15 +225,15 @@ export default function CalculTarif() {
       try {
         const res = await fetch(LIST_URL, {
           signal: ac.signal,
-          headers: { "Accept": "application/json" },
+          headers: { Accept: "application/json" },
         });
         if (res.ok) {
           const data = await res.json();
-          const list: Shipment[] = Array.isArray(data) ? data : (data?.data ?? []);
+          const list: Shipment[] = Array.isArray(data) ? data : data?.data ?? [];
           if (Array.isArray(list)) setShipments(list);
         }
       } catch {
-        /* silencieux sur rafraîchissement */
+        /* noop */
       }
     }, 60000);
     return () => {
@@ -175,12 +259,8 @@ export default function CalculTarif() {
 
   // Raccourci "dernières"
   const recent = useMemo(() => {
-    // On prend les 3 plus récentes (tri sur createdAt si au format lisible)
-    // Si createdAt est ISO, tu peux new Date(createdAt).getTime()
     const parse = (d: string) => new Date(d).getTime() || 0;
-    return [...shipments]
-      .sort((a, b) => parse(b.createdAt) - parse(a.createdAt))
-      .slice(0, 3);
+    return [...shipments].sort((a, b) => parse(b.createdAt) - parse(a.createdAt)).slice(0, 3);
   }, [shipments]);
 
   // Recherche tracking via API
@@ -192,17 +272,14 @@ export default function CalculTarif() {
     setNotFound(false);
     setEvents(null);
     try {
-      const res = await fetch(TRACKING_URL(t), {
-        headers: { "Accept": "application/json" },
-      });
+      const res = await fetch(TRACKING_URL(t), { headers: { Accept: "application/json" } });
       if (!res.ok) {
-        // 404, etc.
         setNotFound(true);
         setEvents(null);
         return;
       }
       const data = await res.json();
-      const list: TrackingEvent[] = Array.isArray(data) ? data : (data?.events ?? []);
+      const list: TrackingEvent[] = Array.isArray(data) ? data : data?.events ?? [];
       if (!Array.isArray(list) || list.length === 0) {
         setNotFound(true);
         setEvents(null);
@@ -221,7 +298,7 @@ export default function CalculTarif() {
   function formatDate(dateStr?: string | null): string {
     if (!dateStr) return "—";
     const d = new Date(dateStr);
-    if (isNaN(d.getTime())) return dateStr; // fallback si string invalide
+    if (isNaN(d.getTime())) return dateStr;
     return d.toLocaleString("fr-FR", {
       day: "2-digit",
       month: "2-digit",
@@ -230,10 +307,81 @@ export default function CalculTarif() {
       minute: "2-digit",
     });
   }
-  
+
+  /* ---------- Handlers modal ---------- */
+  const openModal = async (id: number) => {
+    setSelectedId(id);
+    setDetail(null);
+    setDetailErr(null);
+    setDetailLoading(true);
+    setOpen(true);
+    try {
+      const res = await fetch(GET_DETAIL_URL(id), { headers: { Accept: "application/json" } });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      // On tolère {data:{...}} ou {...}
+      const payload: ShipmentDetail = data?.data ?? data;
+      setDetail(payload);
+      setNewStatus((payload.status || "confirmed") as ShipmentStatus);
+    } catch (e: any) {
+      setDetailErr(e?.message || "Impossible de charger l’expédition");
+    } finally {
+      setDetailLoading(false);
+    }
+  };
+
+  const closeModal = () => {
+    setOpen(false);
+    setSelectedId(null);
+    setDetail(null);
+    setDetailErr(null);
+    setSavingStatus(false);
+  };
+
+  const doUpdateStatus = async () => {
+    if (!selectedId) return;
+    setSavingStatus(true);
+    try {
+      const res = await fetch(PATCH_STATUS_URL(selectedId), {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({
+          status: newStatus,
+          meta: { updatedBy: "dashboard" },
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err?.error || `HTTP ${res.status}`);
+      }
+
+      // On ferme le modal + toast
+      closeModal();
+      showToast("Statut mis à jour avec succès.");
+
+      // Mise à jour locale de la ligne (optimiste)
+      setShipments((cur) =>
+        cur.map((s) => (s.id === selectedId ? { ...s, status: newStatus } : s))
+      );
+    } catch (e: any) {
+      setSavingStatus(false);
+      alert(`Échec de la mise à jour: ${e?.message || "Erreur inconnue"}`);
+    }
+  };
+
+  /* ===========================
+     Render
+  =========================== */
   return (
     <MainLayout>
       <div className="w-full px-3 sm:px-4 lg:px-6 py-4 lg:py-6">
+        {/* Toast */}
+        {toast && (
+          <div className="mb-3 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
+            {toast}
+          </div>
+        )}
+
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
           <h1 className="text-xl md:text-2xl font-bold text-gray-900">Tableau de bord logistique</h1>
@@ -247,9 +395,7 @@ export default function CalculTarif() {
               />
               Auto-refresh (60s)
             </label>
-            <div className="text-xs text-gray-500">
-              Dernière mise à jour : {new Date().toLocaleString()}
-            </div>
+            <div className="text-xs text-gray-500">Dernière mise à jour : {new Date().toLocaleString()}</div>
           </div>
         </div>
 
@@ -273,8 +419,11 @@ export default function CalculTarif() {
                     <span>Créé : {formatDate(s.createdAt)}</span>
                     <span>ETA : {formatDate(s.enlevDate)}</span>
                   </div>
-                  <button className="mt-1 self-start text-xs px-3 py-1 rounded-md border border-gray-300 hover:bg-gray-50">
-                    Détails
+                  <button
+                    className="mt-1 self-start text-xs px-3 py-1 rounded-md border border-gray-300 hover:bg-gray-50"
+                    onClick={() => openModal(s.id)}
+                  >
+                    Voir
                   </button>
                 </div>
               ))}
@@ -306,7 +455,6 @@ export default function CalculTarif() {
                 <button
                   className="rounded-md border px-3 py-2 text-sm text-gray-700 bg-gray-50 hover:bg-gray-100"
                   onClick={() => {
-                    // export CSV simple côté client
                     const rows = [
                       ["trackingNumber", "senderAddress", "recipientAddress", "status", "transportMode", "createdAt", "eta"],
                       ...filtered.map((s) => [
@@ -364,13 +512,15 @@ export default function CalculTarif() {
                         <td className="px-4 py-3">{s.senderAddress}</td>
                         <td className="px-4 py-3">{s.recipientAddress}</td>
                         <td className="px-4 py-3">
-                          {modeIcon(s.transportMode)}{" "}
-                          <span className="ml-1 uppercase text-xs">{s.transportMode}</span>
+                          {modeIcon(s.transportMode)} <span className="ml-1 uppercase text-xs">{s.transportMode}</span>
                         </td>
                         <td className="px-4 py-3">{statusToBadge(s.status)}</td>
                         <td className="px-4 py-3 text-gray-500">{formatDate(s.createdAt)}</td>
                         <td className="px-4 py-3">
-                          <button className="text-xs px-3 py-1 rounded-md border border-gray-300 hover:bg-gray-50">
+                          <button
+                            className="text-xs px-3 py-1 rounded-md border border-gray-300 hover:bg-gray-50"
+                            onClick={() => openModal(s.id)}
+                          >
                             Voir
                           </button>
                         </td>
@@ -409,27 +559,19 @@ export default function CalculTarif() {
               </button>
             </form>
 
-            {/* Carte simple (placeholder) */}
             <div className="mt-4 h-56 rounded-lg bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-500 text-sm">
               Carte / Trajet (intégration Map à brancher)
             </div>
 
-            {/* Résultats tracking */}
             <div className="mt-4">
-              {notFound && (
-                <p className="text-sm text-red-600">
-                  Aucun événement trouvé pour ce numéro.
-                </p>
-              )}
+              {notFound && <p className="text-sm text-red-600">Aucun événement trouvé pour ce numéro.</p>}
               {events && (
                 <ol className="space-y-4">
                   {events.map((ev, idx) => (
                     <li key={idx} className="relative pl-6">
                       <span className="absolute left-0 top-1.5 h-2.5 w-2.5 rounded-full bg-blue-500" />
                       <div className="text-sm font-medium text-gray-900">{ev.status}</div>
-                      <div className="text-xs text-gray-500">
-                        {ev.location} • {ev.timestamp}
-                      </div>
+                      <div className="text-xs text-gray-500">{ev.location} • {ev.timestamp}</div>
                     </li>
                   ))}
                 </ol>
@@ -438,6 +580,86 @@ export default function CalculTarif() {
           </section>
         </div>
       </div>
+
+      {/* -------- Modal Voir + Update statut -------- */}
+      <Modal open={open} onClose={closeModal} title={detail ? `Expédition ${detail.trackingNumber}` : "Détails"}>
+        {detailLoading && <div className="text-sm text-gray-600">Chargement…</div>}
+        {detailErr && <div className="text-sm text-red-600">{detailErr}</div>}
+        {!detailLoading && !detailErr && detail && (
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <div className="text-xs text-gray-500">Origine</div>
+                <div className="text-sm font-medium text-gray-900">{detail.senderAddress}</div>
+              </div>
+              <div>
+                <div className="text-xs text-gray-500">Destination</div>
+                <div className="text-sm font-medium text-gray-900">{detail.recipientAddress}</div>
+              </div>
+              <div>
+                <div className="text-xs text-gray-500">Statut actuel</div>
+                <div className="mt-1">{statusToBadge(detail.status)}</div>
+              </div>
+              <div>
+                <div className="text-xs text-gray-500">Créé le</div>
+                <div className="text-sm font-medium text-gray-900">{formatDate(detail.createdAt)}</div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <div className="text-xs text-gray-500">Expéditeur</div>
+                <div className="text-sm text-gray-800">{detail.senderName} • {detail.senderPhone}</div>
+                <div className="text-xs text-gray-500">{detail.senderEmail}</div>
+              </div>
+              <div>
+                <div className="text-xs text-gray-500">Destinataire</div>
+                <div className="text-sm text-gray-800">{detail.recipientName} • {detail.recipientPhone}</div>
+                <div className="text-xs text-gray-500">{detail.recipientEmail}</div>
+              </div>
+            </div>
+
+            <div className="text-sm">
+              <div className="text-xs text-gray-500">Description</div>
+              <div className="text-gray-800">{detail.description || "—"}</div>
+            </div>
+
+            <div className="border-t pt-3">
+              <label className="block text-xs font-medium text-gray-700 mb-1">Nouveau statut</label>
+              <select
+                value={newStatus}
+                onChange={(e) => setNewStatus(e.target.value)}
+                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+              >
+                <option value="registered">Enregistré</option>
+                <option value="confirmed">Confirmé</option>
+                <option value="in_transit">En transit</option>
+                <option value="customs_clearance">Douane</option>
+                <option value="delivered">Livré</option>
+                <option value="cancelled">Annulé</option>
+                <option value="draft">Draft</option>
+              </select>
+
+              <div className="mt-3 flex justify-end gap-2">
+                <button
+                  className="rounded-md border px-3 py-2 text-sm hover:bg-gray-50"
+                  onClick={closeModal}
+                  disabled={savingStatus}
+                >
+                  Annuler
+                </button>
+                <button
+                  className="rounded-md bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700 disabled:opacity-60"
+                  onClick={doUpdateStatus}
+                  disabled={savingStatus}
+                >
+                  {savingStatus ? "Mise à jour…" : "Mettre à jour"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </Modal>
     </MainLayout>
   );
 }

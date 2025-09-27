@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { calculShipment, estimationShipment } from "../Controller/CalculateController";
 import { alert } from "../Controller/AlertController"
 import { logout,oauthToken,register } from "../Controller/AuthController"
-import { createShipments, getShipments, getShipmentById } from "../Controller/ChipmentsController"
+import { createShipments,createShipment, getShipments, getShipmentById, patchShipmentStatus } from "../Controller/ChipmentsController"
 import { create, search } from "../Controller/HsCodesController"
 import { createTrackingEvent, getShipmentTracking, getShipmentByTrackingNumber} from "../Controller/TrackingController"
 import { createUser, getUserById } from "../Controller/UserController"
@@ -20,9 +20,10 @@ export async function routes(app: Express): Promise<Server> {
   app.get('/api/user/:id', getUserById);
 
   // Shipments
-  app.post('/api/shipments/create', createShipments);
+  app.post('/api/shipments/create', createShipment);
   app.get('/api/shipments/list', getShipments);
   app.get('/api/shipments/:id', getShipmentById);
+  app.patch('/api/shipments/:id/status', patchShipmentStatus );
 
   // Alerts
   app.get('/api/alerts', alert);
@@ -39,6 +40,7 @@ export async function routes(app: Express): Promise<Server> {
   app.post("/api/shipment/:shipmentId/tracking", createTrackingEvent);
   app.get("/api/shipment/:shipmentId/tracking", getShipmentTracking);
   app.get("/api/shipment/tracking/:trackingNumber", getShipmentByTrackingNumber);
+  
 
   //Documents
   // 2️⃣ Télécharger un fichier

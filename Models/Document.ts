@@ -1,42 +1,21 @@
-// server/entities/Document.ts
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  ManyToOne,
-  JoinColumn,
-  CreateDateColumn,
-  UpdateDateColumn,
-} from "typeorm";
-import { Shipment } from "./Shipment"; // ⚠️ il faudra créer Shipment.ts
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from "typeorm";
+import { Shipment } from "./Shipment";
 
 @Entity({ name: "document" })
 export class Document {
+  // PK unsigned (cohérent avec les autres tables numériques)
   @PrimaryGeneratedColumn({ type: "int", unsigned: true })
   id!: number;
 
+  @Column({ type: "varchar", length: 20 }) type!: string;
+  @Column({ type: "varchar", length: 255 }) filename!: string;
+  @Column({ type: "varchar", length: 500 }) url!: string;
+
+  // FK qui DOIT matcher Shipment.id → int unsigned nullable
   @Column({ type: "int", unsigned: true, nullable: true })
   shipmentId!: number | null;
-  
-  @ManyToOne(() => Shipment, (shipment) => shipment.documents, {
-    onDelete: "CASCADE",
-    onUpdate: "CASCADE",
-  })
+
+  @ManyToOne(() => Shipment, (s) => s.documents, { onDelete: "SET NULL", onUpdate: "CASCADE" })
   @JoinColumn({ name: "shipmentId" })
-  shipment!: Shipment;
-
-  @Column({ type: "varchar", length: 64 })
-  type!: string;
-
-  @Column({ type: "varchar", length: 255 })
-  filename!: string;
-
-  @Column({ type: "varchar", length: 1024 })
-  url!: string;
-
-  @CreateDateColumn({ type: "datetime" })
-  createdAt!: Date;
-
-  @UpdateDateColumn({ type: "datetime" })
-  updatedAt!: Date;
+  shipment!: Shipment | null;
 }

@@ -175,8 +175,12 @@ const clampStep = (n: number): 1 | 2 => {
   return v as 1 | 2;
 };
 
-const fmtMoney = (n: number, currency = "USD") =>
-  isFinite(n) ? new Intl.NumberFormat("fr-FR", { style: "currency", currency }).format(n) : "—";
+// Formattage monétaire
+const fmtMoney = (n: number, currency = "XOF") =>
+  isFinite(n)
+    ? new Intl.NumberFormat("fr-FR", { style: "currency", currency, minimumFractionDigits: 0 }).format(n)
+    : "—";
+
 
 /* ===========================
    Types & États
